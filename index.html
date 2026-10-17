@@ -537,15 +537,261 @@
         width: min(12vw, 76px)
       }
     }
+
+    .MyLogo {
+      opacity: 1 !important;
+      position: absolute;
+      top: -5px;
+      font-size: 1.4rem;
+      text-shadow: #f4eaff 0 0 10px;
+
+      right: 20px !important;
+    }
+
+    .lyrics-toggle {
+      position: fixed;
+      background-color: white;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 50px;
+      bottom: 20px;
+      right: 14px;
+    }
+
+    .lyrics-panel {
+      position: fixed;
+      z-index: 4;
+      top: 50%;
+      right: 14px;
+      display: flex;
+      flex-direction: column;
+      width: min(340px, 34vw);
+      max-height: min(58vh, 620px);
+      overflow: hidden;
+      transform: translateY(-50%);
+      border: 1px solid var(--bd2);
+      border-radius: 14px;
+      background: var(--panel);
+      color: var(--text);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 12px 38px rgba(0, 0, 0, .32);
+      animation: lyricsIn .25s ease both;
+    }
+
+    .lyrics-panel[hidden] {
+      display: none
+    }
+
+    @keyframes lyricsIn {
+      from {
+        opacity: 0;
+        transform: translate(10px, -50%)
+      }
+
+      to {
+        opacity: 1;
+        transform: translate(0, -50%)
+      }
+    }
+
+    .lyrics-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid var(--bd2);
+    }
+
+    .lyrics-meta {
+      flex: 1;
+      min-width: 0
+    }
+
+    .lyrics-track,
+    .lyrics-status {
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .lyrics-track {
+      font-size: .82rem;
+      font-weight: 900;
+      white-space: nowrap
+    }
+
+    .lyrics-status {
+      margin-top: 5px;
+      font-size: .65rem;
+      font-weight: 300;
+      opacity: .72
+    }
+
+    .lyrics-close {
+      flex: 0 0 32px;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    .lyrics-content {
+      overflow-y: auto;
+      padding: 12px 14px 18px;
+      overscroll-behavior: contain;
+      scrollbar-color: var(--ice) transparent;
+    }
+
+    .lyrics-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 12px 0;
+    }
+
+    .lyrics-tools button,
+    .lyrics-editor button,
+    .lyrics-editor label {
+      font-size: .68rem;
+      padding: .55em .85em;
+    }
+
+    .lyrics-editor {
+      display: grid;
+      gap: 8px;
+      padding: 10px 12px 0;
+    }
+
+    .lyrics-editor[hidden] {
+      display: none
+    }
+
+    .lyrics-editor textarea {
+      width: 100%;
+      min-height: 112px;
+      resize: vertical;
+      padding: 10px;
+      border: 1px solid var(--bd2);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, .28);
+      color: var(--text);
+      font: 300 .72rem/1.6 "Unbounded", system-ui, sans-serif;
+    }
+
+    .lyrics-editor textarea:focus-visible {
+      outline: 2px solid var(--ice);
+      outline-offset: 2px;
+    }
+
+    .lyrics-editor-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .lyrics-editor input[type=file] {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    .lyric-line {
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: .77rem;
+      line-height: 1.65;
+      opacity: .55;
+      transition: color .2s ease, opacity .2s ease, background-color .2s ease;
+    }
+
+    .lyric-line.active {
+      background: var(--btn);
+      color: var(--ice);
+      opacity: 1
+    }
+
+    .lyric-line.user-lyrics {
+      color: #fff;
+      opacity: 1
+    }
+
+    .lyric-line.user-lyrics.active {
+      color: #fff
+    }
+
+    @media (max-width: 699px) {
+      .lyrics-panel {
+        top: auto;
+        right: 10px;
+        bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+        width: min(360px, calc(100vw - 20px));
+        max-height: 38vh;
+        transform: none;
+      }
+
+      @keyframes lyricsIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px)
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0)
+        }
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .lyrics-panel {
+        animation: none
+      }
+
+      .lyric-line {
+        transition: none
+      }
+    }
   </style>
 </head>
 
 <body>
   <canvas id="c"></canvas>
+  <h1 class="MyLogo">𝙈𝙧 𝘽𝙚𝙠𝙢𝙞𝙧𝙯𝙖𝙮𝙚𝙫 ツ</h1>
   <div id="title">
     <h1 id="h">𝙈𝙧 𝘽𝙚𝙠𝙢𝙞𝙧𝙯𝙖𝙮𝙚𝙫 ツ</h1>
     <p id="ar">Developer</p>
   </div>
+  <button id="lyricsToggle" class="lyrics-toggle" aria-label="Qo'shiq so'zlarini ko'rsatish" aria-expanded="false"
+    title="Qo'shiq so'zlari"><img width="20px" src="./MusicLiyrcs.png" alt="♫"></button>
+  <aside id="lyricsPanel" class="lyrics-panel" aria-label="Qo'shiq so'zlari" hidden>
+    <div class="lyrics-head">
+      <div class="lyrics-meta">
+        <div id="lyricsTrack" class="lyrics-track">Qo'shiq so'zlari</div>
+        <div id="lyricsStatus" class="lyrics-status">Musiqa tanlang</div>
+      </div>
+      <button id="lyricsClose" class="lyrics-close" aria-label="So'zlar panelini yopish">×</button>
+    </div>
+    <div class="lyrics-tools">
+      <button id="lyricsEditToggle" type="button">Matn kiritish / tahrirlash</button>
+      <button id="lyricsDeleteSaved" type="button" hidden>Saqlangan matnni o'chirish</button>
+    </div>
+    <div id="lyricsEditor" class="lyrics-editor" hidden>
+      <textarea id="lyricsInput" aria-label="Qo'shiq so'zlari"
+        placeholder="Gemini yoki boshqa manbadan ko'chirgan matnni shu yerga qo'ying. Vaqtli [00:12.30] LRC matni ham qabul qilinadi."></textarea>
+      <div class="lyrics-editor-actions">
+        <label class="btn" for="lyricsFile">.lrc fayl yuklash</label>
+        <input id="lyricsFile" type="file" accept=".lrc,.txt,text/plain">
+        <button id="lyricsSave" type="button">Saqlash</button>
+        <button id="lyricsCancel" type="button">Bekor qilish</button>
+      </div>
+    </div>
+    <div id="lyricsContent" class="lyrics-content"></div>
+  </aside>
   <div id="msg">Musiqa faylini tanlang – kosmos bitga qarab jonlanadi</div>
   <div id="ui">
     <div id="lib" hidden></div>
@@ -663,6 +909,215 @@
       var ac = null, an = null, src = null, data = new Uint8Array(512), live = false, paused = false, VZ = 0, str = 0, glow = 0, gi = 0, tdir = 1, tilt = 0, peak = .5, hist = [], sDone = true, gC = 0, gR = 0, an2 = null, data2 = new Uint8Array(512), rb = 0, prb = 0, pn = 0, P = { on: true, amt: .4, col: 'mix', sh: 1 };
       var bass = 0, mid = 0, high = 0, avg = .3, beat = 0, lastBeat = 0, spin = 0;
       var msg = $('msg'), ui = $('ui'), pp = $('pp'), h = $('h'), ah = $('ar'), tt = $('title'), hideT;
+      var lyricsPanel = $('lyricsPanel'), lyricsToggle = $('lyricsToggle'), lyricsTrack = $('lyricsTrack'), lyricsStatus = $('lyricsStatus'), lyricsContent = $('lyricsContent');
+      var lyricsAbort = null, lyricsRequest = 0, lyricLines = [], activeLyricIndex = -1, hasSyncedLyrics = false;
+      var lyricsInput = $('lyricsInput'), lyricsEditor = $('lyricsEditor'), currentLyricsKey = '', currentLyricsText = '';
+      var lyricsDeleteSaved = $('lyricsDeleteSaved'), currentLyricsTrack = null;
+      function setLyricsPanel(open) {
+        lyricsPanel.hidden = !open;
+        lyricsToggle.setAttribute('aria-expanded', String(open));
+        lyricsToggle.setAttribute('aria-label', open ? 'Qo\'shiq so\'zlarini yashirish' : 'Qo\'shiq so\'zlarini ko\'rsatish')
+      }
+      lyricsToggle.addEventListener('click', function () { setLyricsPanel(lyricsPanel.hidden) });
+      $('lyricsClose').addEventListener('click', function () { setLyricsPanel(false) });
+      $('lyricsEditToggle').addEventListener('click', function () {
+        lyricsEditor.hidden = !lyricsEditor.hidden;
+        if (!lyricsEditor.hidden) { lyricsInput.value = currentLyricsText; lyricsInput.focus() }
+      });
+      $('lyricsCancel').addEventListener('click', function () { lyricsEditor.hidden = true });
+      lyricsDeleteSaved.addEventListener('click', function () {
+        if (!currentLyricsKey || !confirm('Shu trek uchun o\'zingiz saqlagan matn o\'chirilsinmi?')) return;
+        try { localStorage.removeItem(currentLyricsKey) }
+        catch (error) { lyricsStatus.textContent = 'Saqlangan matnni o\'chirib bo\'lmadi'; return }
+        lyricsDeleteSaved.hidden = true;
+        lyricsEditor.hidden = true;
+        if (currentLyricsTrack) lookupLyrics(currentLyricsTrack.tags, currentLyricsTrack.filename, currentLyricsTrack.duration);
+        else { lyricsStatus.textContent = 'Saqlangan matn o\'chirildi' }
+      });
+      $('lyricsFile').addEventListener('change', function (event) {
+        var file = event.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () { lyricsInput.value = String(reader.result || ''); lyricsEditor.hidden = false };
+        reader.onerror = function () { lyricsStatus.textContent = 'LRC faylni o\'qib bo\'lmadi' };
+        reader.readAsText(file);
+        event.target.value = ''
+      });
+      function normalizeLyricName(value) {
+        return (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+      }
+      function lyricsStorageKey(title, artist) {
+        return 'music-visualizer-lyrics-v1:' + normalizeLyricName(artist) + ':' + normalizeLyricName(title)
+      }
+      function parseLrc(text) {
+        var result = [], offset = 0;
+        (text || '').split(/\r?\n/).forEach(function (row) {
+          var offsetMatch = row.match(/^\[offset:([+-]?\d+)\]/i);
+          if (offsetMatch) { offset = parseInt(offsetMatch[1], 10) / 1000; return }
+          var stamps = [], stampPattern = /\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]/g, match;
+          while ((match = stampPattern.exec(row))) {
+            var fraction = (match[3] || '0').padEnd(3, '0').slice(0, 3);
+            stamps.push(Math.max(0, parseInt(match[1], 10) * 60 + parseInt(match[2], 10) + parseInt(fraction, 10) / 1000 + offset))
+          }
+          var words = row.replace(stampPattern, '').trim();
+          if (words) stamps.forEach(function (time) { result.push({ time: time, text: words }) })
+        });
+        return result.sort(function (a, b) { return a.time - b.time })
+      }
+      function showLyrics(record, title, artist, sourceNote, preferPlain) {
+        lyricsTrack.textContent = title || record.trackName || 'Qo\'shiq so\'zlari';
+        lyricsTrack.title = lyricsTrack.textContent;
+        lyricsContent.textContent = '';
+        activeLyricIndex = -1;
+        lyricLines = parseLrc(record.syncedLyrics || '');
+        currentLyricsText = preferPlain && record.plainLyrics ? record.plainLyrics : (record.syncedLyrics || record.plainLyrics || '');
+        hasSyncedLyrics = lyricLines.length > 0 && !preferPlain;
+        var userLyrics = sourceNote === 'siz saqlagan matn';
+        if (hasSyncedLyrics) {
+          lyricsStatus.textContent = (artist || record.artistName || '') + ' · ' + (sourceNote || 'sinxron matn');
+          lyricLines.forEach(function (line) {
+            var row = document.createElement('div'); row.className = 'lyric-line' + (userLyrics ? ' user-lyrics' : ''); row.textContent = line.text; lyricsContent.appendChild(row)
+          });
+        } else if (record.plainLyrics) {
+          lyricsStatus.textContent = (artist || record.artistName || '') + ' · ' + (sourceNote || 'vaqt belgisisiz');
+          lyricLines = record.plainLyrics.split(/\r?\n/).filter(function (line) { return line.trim() }).map(function (line) { return { time: null, text: line } });
+          lyricLines.forEach(function (line) {
+            var row = document.createElement('div'); row.className = 'lyric-line' + (userLyrics ? ' user-lyrics' : ''); row.textContent = line.text; lyricsContent.appendChild(row)
+          });
+        } else {
+          lyricsStatus.textContent = 'Bu trek uchun matn topilmadi';
+          lyricsContent.textContent = record.instrumental ? 'Instrumental trek' : 'Boshqa trek tanlab ko\'ring.'
+        }
+      }
+      $('lyricsSave').addEventListener('click', function () {
+        var text = lyricsInput.value.trim();
+        if (!text) { lyricsStatus.textContent = 'Avval qo\'shiq matnini kiriting'; return }
+        if (!currentLyricsKey) { lyricsStatus.textContent = 'Avval musiqa tanlang'; return }
+        var timed = parseLrc(text).length > 0;
+        var record = timed ? { syncedLyrics: text } : { plainLyrics: text };
+        try { localStorage.setItem(currentLyricsKey, JSON.stringify({ syncedLyrics: record.syncedLyrics || '', plainLyrics: record.plainLyrics || '' })) }
+        catch (error) { lyricsStatus.textContent = 'Matn brauzerda saqlanmadi. Joy yetarli ekanini tekshiring.'; return }
+        lyricsDeleteSaved.hidden = false;
+        showLyrics(record, lyricsTrack.textContent, 'Siz kiritgan matn', 'siz saqlagan matn');
+        lyricsEditor.hidden = true
+      });
+      function lyricsAreSparse(record, duration) {
+        var lines = parseLrc(record.syncedLyrics || '');
+        if (lines.length < 2) return false;
+        var maxGap = 0;
+        for (var i = 1; i < lines.length; i++) maxGap = Math.max(maxGap, lines[i].time - lines[i - 1].time);
+        return maxGap > 12 || (duration > 90 && lines.length < duration / 18)
+      }
+      function lookupLyricsFallback(title, artist, duration, requestId, originalRecord) {
+        var lyricsUrl = 'https://api.lyrics.ovh/v1/' + encodeURIComponent(artist) + '/' + encodeURIComponent(title);
+        fetch(lyricsUrl, { signal: lyricsAbort.signal, headers: { Accept: 'application/json' } })
+          .then(function (response) {
+            if (!response.ok) throw new Error('Muqobil manbada topilmadi');
+            return response.json()
+          })
+          .then(function (data) {
+            if (requestId !== lyricsRequest) return;
+            if (!data.lyrics || !data.lyrics.trim()) throw new Error('Bo\'sh lyrics javobi');
+            showLyrics({ plainLyrics: data.lyrics }, title, artist, 'lyrics.ovh · uzluksiz matn', true)
+          })
+          .catch(function (error) {
+            if (requestId !== lyricsRequest || error.name === 'AbortError') return;
+            if (originalRecord && originalRecord.plainLyrics) {
+              showLyrics(originalRecord, title, artist, 'LRCLIB · uzluksiz matn', true);
+            } else if (originalRecord && originalRecord.syncedLyrics) {
+              showLyrics(originalRecord, title, artist, 'LRCLIB · siyrak sinxron matn');
+            } else {
+              showLyrics({}, title, artist)
+            }
+          })
+      }
+      function lookupLyrics(tags, filename, duration) {
+        if (lyricsAbort) lyricsAbort.abort();
+        lyricsAbort = new AbortController();
+        var requestId = ++lyricsRequest;
+        var cleanName = filename.replace(/\\/g, '/').split('/').pop().replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
+        var title = (tags.title || cleanName).replace(/\s+/g, ' ').trim();
+        var artist = (tags.artist || '').replace(/\s+/g, ' ').trim();
+        if (!artist) {
+          var parts = cleanName.match(/^(.+?)\s[-–—]\s(.+)$/);
+          if (parts) { artist = parts[1].trim(); if (!tags.title) title = parts[2].trim() }
+        }
+        if (artist) {
+          var escapedArtist = artist.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          title = title.replace(new RegExp('^' + escapedArtist + '\\s*[-–—:]\\s*', 'i'), '').trim()
+        }
+        currentLyricsKey = lyricsStorageKey(title, artist);
+        currentLyricsTrack = { tags: tags, filename: filename, duration: duration };
+        var hasSavedLyrics = false;
+        try { var storedLyrics = JSON.parse(localStorage.getItem(currentLyricsKey) || 'null'); hasSavedLyrics = !!(storedLyrics && (storedLyrics.syncedLyrics || storedLyrics.plainLyrics)) } catch (error) { }
+        lyricsDeleteSaved.hidden = !hasSavedLyrics;
+        lyricsTrack.textContent = title || 'Qo\'shiq so\'zlari';
+        lyricsTrack.title = lyricsTrack.textContent;
+        try {
+          var saved = JSON.parse(localStorage.getItem(currentLyricsKey) || 'null');
+          if (saved && (saved.syncedLyrics || saved.plainLyrics)) {
+            showLyrics(saved, title, artist, 'siz saqlagan matn');
+            setLyricsPanel(true);
+            return
+          }
+        } catch (error) { }
+        lyricsStatus.textContent = 'So\'zlar qidirilmoqda…';
+        lyricsContent.textContent = 'Bir nechta lyrics manbasidan qidirilmoqda. Audio fayl yuborilmaydi.';
+        setLyricsPanel(true);
+        var params = new URLSearchParams({ track_name: title });
+        if (artist) params.set('artist_name', artist);
+        fetch('https://lrclib.net/api/search?' + params.toString(), { signal: lyricsAbort.signal, headers: { Accept: 'application/json' } })
+          .then(function (response) {
+            if (!response.ok) throw new Error(response.status === 429 ? 'Qidiruv limiti vaqtincha to\'ldi.' : 'Lyrics xizmatiga ulanib bo\'lmadi.');
+            return response.json()
+          })
+          .then(function (records) {
+            if (requestId !== lyricsRequest) return;
+            var wantedTitle = normalizeLyricName(title), wantedArtist = normalizeLyricName(artist);
+            var candidates = records.filter(function (record) { return record.syncedLyrics || record.plainLyrics || record.instrumental });
+            candidates.forEach(function (record) {
+              var foundTitle = normalizeLyricName(record.trackName || record.name), foundArtist = normalizeLyricName(record.artistName);
+              record._score = foundTitle === wantedTitle ? 10 : (foundTitle.indexOf(wantedTitle) >= 0 || wantedTitle.indexOf(foundTitle) >= 0 ? 4 : -20);
+              if (wantedArtist) record._score += foundArtist === wantedArtist ? 6 : (foundArtist.indexOf(wantedArtist) >= 0 || wantedArtist.indexOf(foundArtist) >= 0 ? 2 : -5);
+              if (duration && record.duration) {
+                var difference = Math.abs(duration - record.duration);
+                record._score += difference <= 2 ? 5 : difference <= 6 ? 2 : -3
+              }
+              if (record.syncedLyrics) record._score += 1
+            });
+            candidates.sort(function (a, b) { return b._score - a._score });
+            if (!candidates.length || candidates[0]._score < 6) {
+              if (artist) lookupLyricsFallback(title, artist, duration, requestId, null);
+              else showLyrics({}, title, artist);
+              return
+            }
+            var best = candidates[0];
+            if (lyricsAreSparse(best, duration) && artist) {
+              if (best.plainLyrics) showLyrics(best, title, artist, 'LRCLIB · uzluksiz matn', true);
+              else lookupLyricsFallback(title, artist, duration, requestId, best)
+            } else showLyrics(best, title, artist)
+          })
+          .catch(function (error) {
+            if (requestId !== lyricsRequest || error.name === 'AbortError') return;
+            if (artist) lookupLyricsFallback(title, artist, duration, requestId, null);
+            else {
+              lyricsStatus.textContent = error.message || 'So\'zlarni qidirib bo\'lmadi';
+              lyricsContent.textContent = 'Ulanishni tekshirib, birozdan keyin qayta urinib ko\'ring.'
+            }
+          })
+      }
+      function syncLyrics() {
+        if (!hasSyncedLyrics || lyricsPanel.hidden || !live || paused || !curBuf) return;
+        var time = pos(), nextIndex = -1;
+        for (var i = 0; i < lyricLines.length; i++) { if (lyricLines[i].time > time) break; nextIndex = i }
+        if (nextIndex === activeLyricIndex) return;
+        if (activeLyricIndex >= 0 && lyricsContent.children[activeLyricIndex]) lyricsContent.children[activeLyricIndex].classList.remove('active');
+        activeLyricIndex = nextIndex;
+        if (nextIndex >= 0 && lyricsContent.children[nextIndex]) {
+          var activeRow = lyricsContent.children[nextIndex]; activeRow.classList.add('active'); activeRow.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' })
+        }
+      }
+      setInterval(syncLyrics, 120);
       function setTitle(tg, fn) {
         var nm = fn.replace(/\.[^.]+$/, '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim(), ti = nm, ar = '', ix = nm.indexOf(' - ');
         if (ix > 0) { ar = nm.slice(0, ix).trim(); ti = nm.slice(ix + 3).trim() }
@@ -735,7 +1190,7 @@
             src.connect(an); src.connect(an2); an.connect(ac.destination); src.start(0);
             if (ac.state === 'suspended') ac.resume();
             live = true; paused = false; pp.disabled = false; pp.textContent = 'Pauza';
-            setTitle(tg, file.name); msg.textContent = ''; showUI();
+            setTitle(tg, file.name); lookupLyrics(tg, file.name, buf.duration); msg.textContent = ''; showUI();
           }, function () { msg.textContent = "Faylni o'qib bo'lmadi. Boshqa audio fayl tanlang." });
         };
         r.readAsArrayBuffer(file);
