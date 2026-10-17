@@ -4,7 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Kosmik edit</title>
+  <title>AuraMB</title>
+  <link rel="icon" href="./siteLogo.png">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;900&display=swap">
   <style>
     :root {
@@ -82,6 +83,73 @@
       text-shadow: -3px 0 var(--magenta), 3px 0 var(--ice), 0 0 40px var(--violet)
     }
 
+    #titleEditButton {
+      position: fixed;
+      z-index: 6;
+      top: 50%;
+      right: 18px;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      transform: translateY(-50%);
+      pointer-events: auto;
+      opacity: .9;
+      animation: none !important;
+    }
+
+    #titleEditButton[hidden],
+    #titleEditorPanel[hidden] {
+      display: none;
+    }
+
+    #titleEditorPanel {
+      position: fixed;
+      z-index: 7;
+      top: 50%;
+      left: 50%;
+      width: min(620px, 90vw);
+      padding: 14px;
+      transform: translate(-50%, -50%);
+      border: 1px solid var(--bd2);
+      border-radius: 12px;
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 12px 38px rgba(0, 0, 0, .38);
+      pointer-events: auto;
+      animation: none !important;
+    }
+
+    #titleEditorPanel input,
+    #titleEditorPanel textarea {
+      display: block;
+      width: 100%;
+      margin: 0 0 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--bd2);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, .28);
+      color: var(--text);
+      font: 300 .85rem/1.5 "Unbounded", system-ui, sans-serif;
+    }
+
+    #titleEditorPanel textarea {
+      min-height: 84px;
+      resize: vertical;
+      font-size: 1rem;
+      font-weight: 900;
+    }
+
+    .title-editor-actions {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .title-editor-actions button {
+      padding: .55em .9em;
+      font-size: .72rem;
+    }
+
     #title p {
       margin: .7em 0 0;
       padding: 0 3vw;
@@ -147,6 +215,26 @@
     #sw {
       display: flex;
       gap: 8px
+    }
+
+    #autoTheme {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    #autoTheme.on {
+      background: var(--btnh);
+      border-color: var(--ice);
+      box-shadow: 0 0 10px var(--ice)
+    }
+
+    #autoThemeInterval {
+      max-width: 76px;
+      font-size: .68rem
     }
 
     button:focus-visible,
@@ -766,6 +854,17 @@
     <h1 id="h">𝙈𝙧 𝘽𝙚𝙠𝙢𝙞𝙧𝙯𝙖𝙮𝙚𝙫 ツ</h1>
     <p id="ar">Developer</p>
   </div>
+  <button id="titleEditButton" type="button" aria-label="Sarlavha va artistni tahrirlash" title="Tahrirlash"
+    hidden>✎</button>
+  <div id="titleEditorPanel" hidden>
+    <input id="titleArtistInput" type="text" maxlength="120" aria-label="Artist nomi" placeholder="Artist nomi">
+    <textarea id="titleTextInput" maxlength="240" aria-label="Musiqa nomi" placeholder="Musiqa nomi"></textarea>
+    <div class="title-editor-actions">
+      <button id="titleNewline" type="button" aria-label="Yangi qator" title="Yangi qator">↵</button>
+      <button id="titleSave" type="button">Saqlash</button>
+      <button id="titleCancel" type="button">Bekor qilish</button>
+    </div>
+  </div>
   <button id="lyricsToggle" class="lyrics-toggle" aria-label="Qo'shiq so'zlarini ko'rsatish" aria-expanded="false"
     title="Qo'shiq so'zlari"><img width="20px" src="./MusicLiyrcs.png" alt="♫"></button>
   <aside id="lyricsPanel" class="lyrics-panel" aria-label="Qo'shiq so'zlari" hidden>
@@ -825,7 +924,13 @@
           <option value="7">Sonar</option>
           <option value="8">Ko'zgu</option>
         </select></label>
-      <div class="rng"><span>Mavzu</span><span id="sw"></span></div>
+      <div class="rng"><span>Mavzu</span><span id="sw"></span><button id="autoTheme" type="button"
+          aria-label="Avtomatik mavzu almashishini yoqish" aria-pressed="false"
+          title="Avtomatik mavzu">↻</button><select id="autoThemeInterval" aria-label="Mavzu almashish oralig'i"
+          title="Almashish oralig'i">
+          <option value="30">30 s</option>
+          <option value="60" selected>1 min</option>
+        </select></div>
       <label class="rng">Takror<select id="rm">
           <option value="0">Bitta takror</option>
           <option value="1">Ro'yxat bo'yicha</option>
@@ -909,6 +1014,48 @@
       var ac = null, an = null, src = null, data = new Uint8Array(512), live = false, paused = false, VZ = 0, str = 0, glow = 0, gi = 0, tdir = 1, tilt = 0, peak = .5, hist = [], sDone = true, gC = 0, gR = 0, an2 = null, data2 = new Uint8Array(512), rb = 0, prb = 0, pn = 0, P = { on: true, amt: .4, col: 'mix', sh: 1 };
       var bass = 0, mid = 0, high = 0, avg = .3, beat = 0, lastBeat = 0, spin = 0;
       var msg = $('msg'), ui = $('ui'), pp = $('pp'), h = $('h'), ah = $('ar'), tt = $('title'), hideT;
+      var titleEditButton = $('titleEditButton'), titleEditorPanel = $('titleEditorPanel'), titleArtistInput = $('titleArtistInput'), titleTextInput = $('titleTextInput');
+      var currentTitleKey = '', currentTitleTags = null, currentTitleName = '', currentArtistName = '';
+      function syncTitleEditButton() {
+        titleEditButton.hidden = !(live && paused);
+        if (!live || !paused) titleEditorPanel.hidden = true
+      }
+      function openTitleEditor() {
+        if (!live || !paused) return;
+        titleArtistInput.value = currentArtistName;
+        titleTextInput.value = currentTitleName;
+        titleEditorPanel.hidden = false;
+        titleTextInput.focus()
+      }
+      function closeTitleEditor() { titleEditorPanel.hidden = true }
+      function insertTitleNewline() {
+        if (titleEditorPanel.hidden || !live || !paused) return;
+        var start = titleTextInput.selectionStart, end = titleTextInput.selectionEnd;
+        titleTextInput.setRangeText('\n', start, end, 'end');
+        titleTextInput.focus()
+      }
+      titleEditButton.addEventListener('click', openTitleEditor);
+      $('titleNewline').addEventListener('click', insertTitleNewline);
+      $('titleCancel').addEventListener('click', closeTitleEditor);
+      $('titleSave').addEventListener('click', function () {
+        if (!live || !paused || !currentTitleKey) return;
+        var title = titleTextInput.value.trim(), artist = titleArtistInput.value.trim();
+        if (!title) { titleTextInput.focus(); return }
+        try { localStorage.setItem(currentTitleKey, JSON.stringify({ title: title, artist: artist })) }
+        catch (error) { msg.textContent = 'Sarlavha saqlanmadi. Brauzer xotirasini tekshiring.'; return }
+        currentTitleName = title;
+        currentArtistName = artist;
+        if (currentTitleTags) currentTitleTags.artist = artist;
+        h3d(title);
+        ah.textContent = artist;
+        fitTitle(title, artist);
+        closeTitleEditor()
+      });
+      titleTextInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && event.shiftKey) { event.preventDefault(); insertTitleNewline() }
+        else if (event.key === 'Enter') { event.preventDefault(); $('titleSave').click() }
+        else if (event.key === 'Escape') { event.preventDefault(); closeTitleEditor() }
+      });
       var lyricsPanel = $('lyricsPanel'), lyricsToggle = $('lyricsToggle'), lyricsTrack = $('lyricsTrack'), lyricsStatus = $('lyricsStatus'), lyricsContent = $('lyricsContent');
       var lyricsAbort = null, lyricsRequest = 0, lyricLines = [], activeLyricIndex = -1, hasSyncedLyrics = false;
       var lyricsInput = $('lyricsInput'), lyricsEditor = $('lyricsEditor'), currentLyricsKey = '', currentLyricsText = '';
@@ -1122,8 +1269,19 @@
         var nm = fn.replace(/\.[^.]+$/, '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim(), ti = nm, ar = '', ix = nm.indexOf(' - ');
         if (ix > 0) { ar = nm.slice(0, ix).trim(); ti = nm.slice(ix + 3).trim() }
         if (tg.title && tg.artist) { ti = tg.title; ar = tg.artist }
+        currentTitleKey = 'music-visualizer-title-v1:' + normalizeLyricName(fn);
+        currentTitleTags = tg;
+        try {
+          var savedTitle = JSON.parse(localStorage.getItem(currentTitleKey) || 'null');
+          if (savedTitle) { ti = savedTitle.title || ti; ar = savedTitle.artist != null ? savedTitle.artist : ar }
+        } catch (e) { }
+        currentTitleName = ti;
+        currentArtistName = ar;
+        if (ar) tg.artist = ar;
         h3d(ti); minuteMark = ac ? Math.floor((ac.currentTime - t0a) / 60) : 0; ah.textContent = ar; ah.classList.remove('a3'); void ah.offsetWidth; ah.classList.add('a3');
         fitTitle(ti, ar);
+        titleEditorPanel.hidden = true;
+        syncTitleEditButton();
 
       }
       function showUI() { ui.classList.remove('hide'); clearTimeout(hideT); if (live) hideT = setTimeout(function () { if (!paused) ui.classList.add('hide') }, 3500) }
@@ -1196,7 +1354,7 @@
         r.readAsArrayBuffer(file);
       }
       $('f').addEventListener('change', function (e) { playFile(e.target.files[0]); e.target.value = '' });
-      pp.onclick = function () { if (!ac) return; if (paused) { ac.resume(); pp.textContent = 'Pauza' } else { ac.suspend(); pp.textContent = 'Davom etish' } paused = !paused; showUI() };
+      pp.onclick = function () { if (!ac) return; if (paused) { ac.resume(); pp.textContent = 'Pauza' } else { ac.suspend(); pp.textContent = 'Davom etish' } paused = !paused; syncTitleEditButton(); showUI() };
       $('fs').onclick = function () { if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document) } else { var d = document.documentElement; (d.requestFullscreen || d.webkitRequestFullscreen || function () { }).call(d) } };
       var vzEl = $('vz'); try { var sv = parseInt(localStorage.getItem('polisha-vz')); if (sv >= 0 && sv <= 8) VZ = sv } catch (e) { }
       vzEl.value = VZ; vzEl.addEventListener('change', function () { VZ = +vzEl.value; try { localStorage.setItem('polisha-vz', VZ) } catch (e) { } });
@@ -1295,32 +1453,91 @@
         { n: 'Toksik', bg: '4,1,10', v: '140,40,255', m: '190,255,0', i: '200,255,120', w: '240,255,220', e: '190,255,0', l: '190,120,255', c: ['190,255,0', '255,40,200', '120,255,60'], s: '255,10,25', k0: '40,8,70', k1: '3,0,8' },
         { n: 'Kumush', bg: '4,4,6', v: '120,120,140', m: '200,200,215', i: '235,235,245', w: '250,250,252', e: '170,170,185', l: '180,180,200', c: ['230,230,245', '190,190,210', '255,255,255'], s: '128,128,128', k0: '40,40,52', k1: '2,2,4' }
       ], T = THEMES[0], TI = 0;
-      function applyTheme(k) {
-        TI = k; T = THEMES[k];
+      var themeFx = 0, themeAutoTime = 0, autoThemeButton = $('autoTheme'), autoThemeInterval = $('autoThemeInterval');
+      function setThemeVisual(theme) {
+        T = theme;
         var r = document.documentElement.style, rgb = function (c) { return 'rgb(' + c + ')' }, b = T.bg.split(',').map(Number);
         r.setProperty('--void', rgb(T.bg)); r.setProperty('--violet', rgb(T.v)); r.setProperty('--magenta', rgb(T.m)); r.setProperty('--ice', rgb(T.i)); r.setProperty('--text', rgb(T.w));
         r.setProperty('--btn', 'rgba(' + T.v + ',.25)'); r.setProperty('--btnh', 'rgba(' + T.v + ',.5)'); r.setProperty('--bd', 'rgba(' + T.i + ',.5)'); r.setProperty('--bd2', 'rgba(' + T.i + ',.35)'); r.setProperty('--panel', 'rgba(' + T.bg + ',.75)');
         r.setProperty('--opt', 'rgb(' + (b[0] + 14) + ',' + (b[1] + 14) + ',' + (b[2] + 18) + ')');
-        var rc = [T.e, T.i, T.m, T.l, T.w]; rings.forEach(function (q, j) { q.col = rc[j] });
-        var bs = document.querySelectorAll('#sw .sw'); for (var j = 0; j < bs.length; j++) { bs[j].classList.toggle('on', j === k); bs[j].setAttribute('aria-pressed', j === k) }
+        var rc = [T.e, T.i, T.m, T.l, T.w]; rings.forEach(function (q, j) { q.col = rc[j] })
+      }
+      function copyTheme(theme) {
+        var copy = {};
+        Object.keys(theme).forEach(function (key) { copy[key] = Array.isArray(theme[key]) ? theme[key].slice() : theme[key] });
+        return copy
+      }
+      function blendRgb(from, to, amount) {
+        var a = from.split(',').map(Number), b = to.split(',').map(Number);
+        return a.map(function (channel, index) { return Math.round(channel + (b[index] - channel) * amount) }).join(',')
+      }
+      function blendTheme(from, to, amount) {
+        var blended = {};
+        Object.keys(to).forEach(function (key) {
+          blended[key] = Array.isArray(to[key]) ? to[key].map(function (color, index) { return blendRgb(from[key][index], color, amount) }) : blendRgb(from[key], to[key], amount)
+        });
+        return blended
+      }
+      function applyTheme(k, instant) {
+        TI = k;
+        if (themeFx) cancelAnimationFrame(themeFx);
+        var startTheme = copyTheme(T), targetTheme = THEMES[k], startTime = performance.now(), duration = instant || reduce ? 0 : 1000;
+        function transition(now) {
+          var progress = duration ? Math.min(1, (now - startTime) / duration) : 1;
+          var eased = progress * progress * (3 - 2 * progress);
+          setThemeVisual(blendTheme(startTheme, targetTheme, eased));
+          if (progress < 1) themeFx = requestAnimationFrame(transition);
+          else { themeFx = 0; setThemeVisual(targetTheme) }
+        }
+        if (instant || reduce) { setThemeVisual(targetTheme); themeFx = 0 }
+        else themeFx = requestAnimationFrame(transition);
+        var autoEnabled = autoThemeButton.classList.contains('on');
+        var bs = document.querySelectorAll('#sw .sw'); for (var j = 0; j < bs.length; j++) { bs[j].classList.toggle('on', !autoEnabled && j === k); bs[j].setAttribute('aria-pressed', !autoEnabled && j === k) }
         try { localStorage.setItem('polisha-th', k) } catch (e) { }
       }
       THEMES.forEach(function (t, j) {
         var b = document.createElement('button'); b.className = 'sw'; b.title = t.n; b.setAttribute('aria-label', 'Mavzu: ' + t.n);
         b.style.background = 'linear-gradient(135deg,rgb(' + t.v + '),rgb(' + t.m + ') 55%,rgb(' + t.i + '))'; b.onclick = function () { applyTheme(j); showUI() }; $('sw').appendChild(b)
       });
+      function setAutoTheme(enabled, persist) {
+        autoThemeButton.classList.toggle('on', enabled);
+        autoThemeButton.setAttribute('aria-pressed', String(enabled));
+        autoThemeButton.setAttribute('aria-label', enabled ? 'Avtomatik mavzu almashishini o\'chirish' : 'Avtomatik mavzu almashishini yoqish');
+        autoThemeButton.title = enabled ? 'Avtomatik mavzu yoqilgan' : 'Avtomatik mavzu';
+        var swatches = document.querySelectorAll('#sw .sw');
+        swatches.forEach(function (swatch, index) {
+          var selected = !enabled && index === TI;
+          swatch.classList.toggle('on', selected);
+          swatch.setAttribute('aria-pressed', String(selected))
+        });
+        if (persist) { try { localStorage.setItem('polisha-auto-theme', enabled ? '1' : '0') } catch (e) { } }
+      }
+      autoThemeButton.addEventListener('click', function () {
+        setAutoTheme(!autoThemeButton.classList.contains('on'), true);
+        themeAutoTime = 0
+      });
+      autoThemeInterval.addEventListener('change', function () {
+        try { localStorage.setItem('polisha-auto-theme-interval', autoThemeInterval.value) } catch (e) { }
+        themeAutoTime = 0
+      });
+      try {
+        var savedAuto = localStorage.getItem('polisha-auto-theme') === '1';
+        var savedInterval = localStorage.getItem('polisha-auto-theme-interval');
+        if (savedInterval === '30' || savedInterval === '60') autoThemeInterval.value = savedInterval;
+        setAutoTheme(savedAuto, false)
+      } catch (e) { setAutoTheme(false, false) }
       try { var sth = parseInt(localStorage.getItem('polisha-th')); if (sth >= 0 && sth < THEMES.length) TI = sth } catch (e) { }
-      applyTheme(TI);
+      applyTheme(TI, true);
       /* ===== 3D sarlavha, moslashuvchan o'lcham, avto to'liq ekran, sozlamalar paneli ===== */
       var mc = document.createElement('canvas').getContext('2d'), curTi = '', curAr = '', fsDone = false, minuteMark = 0;
       function fitTitle(ti, ar) {
         curTi = ti; curAr = ar; var aw = innerWidth * .9;
-        mc.font = '900 100px Unbounded,system-ui,sans-serif'; var w1 = mc.measureText(ti).width || 100;
+        mc.font = '900 100px Unbounded,system-ui,sans-serif'; var w1 = mc.measureText(ti.replace(/\n/g, '')).width || 100;
         h.style.fontSize = Math.max(14, Math.min(innerWidth * .17, innerHeight * .2, aw / w1 * 100)) + 'px';
         mc.font = '300 100px Unbounded,system-ui,sans-serif'; var w2 = (mc.measureText(ar).width || 100) + ar.length * 40;
         ah.style.fontSize = Math.max(10, Math.min(26, innerWidth * .032, aw / Math.max(w2, 1) * 100)) + 'px'
       }
-      function h3d(ti) { h.textContent = ''; Array.from(ti).forEach(function (c, i) { var sp_ = document.createElement('span'); sp_.className = 'ch'; sp_.style.setProperty('--i', i); sp_.textContent = c; h.appendChild(sp_) }) }
+      function h3d(ti) { h.textContent = ''; Array.from(ti).forEach(function (c, i) { if (c === '\n') { h.appendChild(document.createElement('br')); return } var sp_ = document.createElement('span'); sp_.className = 'ch'; sp_.style.setProperty('--i', i); sp_.textContent = c; h.appendChild(sp_) }) }
       function spinTitle() {
         Array.from(h.querySelectorAll('.ch')).forEach(function (letter, i) {
           letter.classList.remove('minute-x', 'minute-y', 'ending');
@@ -1374,6 +1591,13 @@
       function frame(now) {
         requestAnimationFrame(frame);
         var dt = Math.min((now - last) / 16.67, 3); last = now; var t = (now - t0) / 1000, tb, tm, th;
+        if (live && !paused && autoThemeButton.classList.contains('on')) {
+          themeAutoTime += dt * 16.67 / 1000;
+          if (themeAutoTime >= +autoThemeInterval.value) {
+            themeAutoTime %= +autoThemeInterval.value;
+            applyTheme((TI + 1) % THEMES.length)
+          }
+        }
         if (live && !paused && ac) { var elapsedMinute = Math.floor((ac.currentTime - t0a) / 60); if (elapsedMinute > minuteMark) { minuteMark = elapsedMinute; spinTitle() } }
         if (live && an && !paused) { an.getByteFrequencyData(data); an2.getByteFrequencyData(data2); tb = band(1, 7); tm = band(7, 60); th = band(60, 200); rb = 0; for (var i = 1; i < 7; i++)rb += data2[i]; rb /= 1530 }
         else if (!live) { tb = .22 + .1 * Math.sin(t * 1.4); tm = .2 + .08 * Math.sin(t * .9); th = .15; for (var i = 0; i < 512; i++)data[i] = (.25 + .2 * Math.sin(i * .12 + t * 2)) * 140 }
