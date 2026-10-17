@@ -893,9 +893,13 @@
       transition: transform .25s ease, background-color .2s ease;
     }
 
-    #controlsToggle.collapsed { transform: rotate(180deg) }
+    #controlsToggle.collapsed {
+      transform: rotate(180deg)
+    }
 
-    #ui.controls-collapsed { display: none !important }
+    #ui.controls-collapsed {
+      display: none !important
+    }
 
     #helpOverlay {
       position: fixed;
@@ -1125,7 +1129,8 @@
       </div>
     </section>
   </div>
-  <button id="controlsToggle" type="button" aria-label="Boshqaruvlarni burchakka yig'ish" aria-pressed="false" title="Boshqaruvlarni yig'ish">↙</button>
+  <button id="controlsToggle" type="button" aria-label="Boshqaruvlarni burchakka yig'ish" aria-pressed="false"
+    title="Boshqaruvlarni yig'ish">↙</button>
   <div id="msg">Musiqa faylini tanlang – kosmos bitga qarab jonlanadi</div>
   <div id="ui">
     <div id="lib" hidden></div>
