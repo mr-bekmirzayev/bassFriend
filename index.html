@@ -139,6 +139,28 @@
       font-weight: 900;
     }
 
+    .title-size-control {
+      display: grid;
+      grid-template-columns: auto minmax(80px, 1fr) 3.5em;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 12px;
+      font-size: .72rem;
+    }
+
+    #titleSizeRange {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      accent-color: var(--ice);
+    }
+
+    #titleSizeValue {
+      text-align: right;
+      font-size: .7rem;
+      font-variant-numeric: tabular-nums;
+    }
+
     .title-editor-actions {
       display: flex;
       justify-content: center;
@@ -844,6 +866,154 @@
         transition: none
       }
     }
+
+    #helpButton {
+      position: fixed;
+      right: 15px;
+      font-size: 25px;
+      padding: 8px 18px;
+      bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+    }
+
+    #controlsToggle {
+      position: fixed;
+      z-index: 9;
+      left: 64px;
+      bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      font-size: 1.15rem;
+      line-height: 1;
+      font-weight: 900;
+      backdrop-filter: blur(10px);
+      transition: transform .25s ease, background-color .2s ease;
+    }
+
+    #controlsToggle.collapsed { transform: rotate(180deg) }
+
+    #ui.controls-collapsed { display: none !important }
+
+    #helpOverlay {
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: max(16px, env(safe-area-inset-top, 0px)) 14px max(16px, env(safe-area-inset-bottom, 0px));
+      background: rgba(0, 0, 0, .64);
+      backdrop-filter: blur(5px);
+    }
+
+    #helpOverlay[hidden] {
+      display: none
+    }
+
+    #helpDialog {
+      display: flex;
+      flex-direction: column;
+      width: min(680px, 100%);
+      max-height: min(86dvh, 760px);
+      overflow: hidden;
+      border: 1px solid var(--bd2);
+      border-radius: 14px;
+      background: var(--panel);
+      color: var(--text);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, .48);
+      animation: helpIn .2s ease-out both;
+    }
+
+    @keyframes helpIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(.99)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1)
+      }
+    }
+
+    .help-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--bd2);
+    }
+
+    .help-header h2 {
+      flex: 1;
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 900;
+    }
+
+    #helpClose {
+      flex: 0 0 36px;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    .help-content {
+      overflow-y: auto;
+      padding: 6px 20px 22px;
+      overscroll-behavior: contain;
+      scrollbar-color: var(--ice) transparent;
+      font-size: .78rem;
+      font-weight: 300;
+      line-height: 1.75;
+    }
+
+    .help-content h3 {
+      margin: 18px 0 6px;
+      color: var(--ice);
+      font-size: .84rem;
+      font-weight: 900;
+    }
+
+    .help-content p {
+      margin: 6px 0
+    }
+
+    .help-content ul {
+      margin: 6px 0;
+      padding-left: 1.35em
+    }
+
+    .help-content li {
+      margin: 4px 0
+    }
+
+    @media (max-width: 699px) {
+      #controlsToggle {
+        left: 56px;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        width: 38px;
+        height: 38px;
+      }
+
+      #helpDialog {
+        max-height: 88dvh
+      }
+
+      .help-content {
+        padding-right: 16px;
+        padding-left: 16px
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #helpDialog {
+        animation: none
+      }
+    }
   </style>
 </head>
 
@@ -859,6 +1029,11 @@
   <div id="titleEditorPanel" hidden>
     <input id="titleArtistInput" type="text" maxlength="120" aria-label="Artist nomi" placeholder="Artist nomi">
     <textarea id="titleTextInput" maxlength="240" aria-label="Musiqa nomi" placeholder="Musiqa nomi"></textarea>
+    <label class="title-size-control" for="titleSizeRange">
+      <span>Sarlavha o'lchami</span>
+      <input id="titleSizeRange" type="range" min="70" max="125" step="5" value="100">
+      <output id="titleSizeValue" for="titleSizeRange">100%</output>
+    </label>
     <div class="title-editor-actions">
       <button id="titleNewline" type="button" aria-label="Yangi qator" title="Yangi qator">↵</button>
       <button id="titleSave" type="button">Saqlash</button>
@@ -891,6 +1066,66 @@
     </div>
     <div id="lyricsContent" class="lyrics-content"></div>
   </aside>
+  <button id="helpButton" type="button" aria-label="Yordam va ilova haqida" aria-haspopup="dialog" aria-expanded="false"
+    title="Yordam">?</button>
+  <div id="helpOverlay" hidden>
+    <section id="helpDialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle" tabindex="-1">
+      <div class="help-header">
+        <h2 id="helpTitle">Ilova qo'llanmasi</h2>
+        <button id="helpClose" type="button" aria-label="Yordamni yopish">×</button>
+      </div>
+      <div class="help-content">
+        <p>Mahalliy audio fayllaringizni tinglang, kosmik vizualizatsiyani sozlang va qo'shiq so'zlarini kuzating.</p>
+        <h3>Musiqa va kutubxona</h3>
+        <ul>
+          <li><strong>Musiqani tanlash</strong> orqali qurilmangizdan audio fayl oching. Tanlangan trek brauzer
+            kutubxonasiga saqlanadi.</li>
+          <li><strong>⏮ / ⏭</strong> oldingi yoki keyingi trekni tanlaydi. Kutubxonada trek nomini bosib ijro eting;
+            yuqori/past tugmalari tartibni o'zgartiradi, × trekni o'chiradi.</li>
+          <li><strong>Pauza / Davom etish</strong> ijroni boshqaradi. Vaqt chizig'ini sudrab trek ichida oldinga yoki
+            orqaga o'ting.</li>
+          <li><strong>Takror</strong> sozlamasida bitta trekni, ro'yxatni, teskari ro'yxatni yoki takrorsiz ijroni
+            tanlang.</li>
+        </ul>
+        <h3>Vizualizatsiya</h3>
+        <ul>
+          <li><strong>Ta'sir kuchi</strong> audio reaksiyasining sezgirligini o'zgartiradi.</li>
+          <li><strong>Bas shakli</strong> chiziq, to'lqin, nuqta, nur, o'chiq, poligon, spiral, sonar va ko'zgu
+            ko'rinishlaridan birini tanlaydi.</li>
+          <li><strong>Otilib chiquvchilar</strong> zarrachalarni yoqib/o'chiradi; soni, rangi va soyasini shu panelda
+            sozlang.</li>
+          <li><strong>To'liq ekran</strong> vizualizatorni butun ekranga yoyadi.</li>
+        </ul>
+        <h3>Mavzular</h3>
+        <ul>
+          <li>Rang doiralaridan mavjud mavzulardan birini tanlang. Ranglar silliq almashadi.</li>
+          <li><strong>↻</strong> avtomatik mavzuni yoqadi yoki o'chiradi. 30 soniya yoki 1 daqiqani tanlang; almashish
+            faqat musiqa ijro etilayotganda davom etadi.</li>
+        </ul>
+        <h3>Sarlavha va artist</h3>
+        <ul>
+          <li>Musiqani pauza qiling: sarlavha yonidagi qalam tugmasi chiqadi. Unda trek nomi, artist va sarlavha
+            o'lchamini o'zgartiring.</li>
+          <li>O'lcham 70%–125% oralig'ida. Yangi qator tugmasi yoki <strong>Shift+Enter</strong> ko'p qatorli sarlavha
+            kiritadi; Enter saqlaydi.</li>
+          <li>O'zgartirishlar trek uchun shu brauzerda saqlanadi. Ijro davomida tahrirlash yopiq.</li>
+        </ul>
+        <h3>Qo'shiq so'zlari</h3>
+        <ul>
+          <li>♫ tugmasi so'zlar panelini ochadi. Trek nomi va mavjud artist ma'lumoti asosida internetdan qidiriladi;
+            audio fayl tashqi xizmatga yuborilmaydi.</li>
+          <li>Vaqtli lyrics bo'lsa satrlar ijro bilan sinxron yuradi. Vaqt belgisisiz matn oddiy ro'yxat bo'lib chiqadi.
+          </li>
+          <li>Topilmasa <strong>Matn kiritish / tahrirlash</strong> orqali matn qo'ying yoki .lrc/.txt fayl yuklang.
+            Saqlangan matn trekka bog'lanadi; o'chirish tugmasi uni olib tashlab internet natijasiga qaytaradi.</li>
+        </ul>
+        <h3>Boshqaruvlarni yashirish</h3>
+        <p>Musiqa ijro etilayotganda boshqaruvlar birozdan so'ng yashirinadi. Vizualizator maydonini bosing:
+          boshqaruvlarni yashirish yoki qayta ko'rsatish mumkin. Mobil qurilmada sozlamalar ⚙ tugmasida jamlangan.</p>
+      </div>
+    </section>
+  </div>
+  <button id="controlsToggle" type="button" aria-label="Boshqaruvlarni burchakka yig'ish" aria-pressed="false" title="Boshqaruvlarni yig'ish">↙</button>
   <div id="msg">Musiqa faylini tanlang – kosmos bitga qarab jonlanadi</div>
   <div id="ui">
     <div id="lib" hidden></div>
@@ -1014,7 +1249,76 @@
       var ac = null, an = null, src = null, data = new Uint8Array(512), live = false, paused = false, VZ = 0, str = 0, glow = 0, gi = 0, tdir = 1, tilt = 0, peak = .5, hist = [], sDone = true, gC = 0, gR = 0, an2 = null, data2 = new Uint8Array(512), rb = 0, prb = 0, pn = 0, P = { on: true, amt: .4, col: 'mix', sh: 1 };
       var bass = 0, mid = 0, high = 0, avg = .3, beat = 0, lastBeat = 0, spin = 0;
       var msg = $('msg'), ui = $('ui'), pp = $('pp'), h = $('h'), ah = $('ar'), tt = $('title'), hideT;
+      var helpButton = $('helpButton'), helpOverlay = $('helpOverlay'), helpDialog = $('helpDialog');
+      var controlsToggle = $('controlsToggle'), controlsCollapsed = false, controlsAnimationId = 0, controlsAnimations = [];
+      function visibleControlGroups() {
+        return Array.prototype.filter.call(ui.children, function (group) {
+          return !group.hidden && group.getClientRects().length > 0
+        })
+      }
+      function toggleControls() {
+        controlsCollapsed = !controlsCollapsed;
+        var animationId = ++controlsAnimationId;
+        controlsAnimations.forEach(function (animation) { animation.cancel() });
+        controlsAnimations = [];
+        var groups = visibleControlGroups(), anchor = controlsToggle.getBoundingClientRect();
+        var anchorX = anchor.left + anchor.width / 2, anchorY = anchor.top + anchor.height / 2;
+        clearTimeout(hideT);
+        ui.classList.remove('hide');
+        controlsToggle.classList.toggle('collapsed', controlsCollapsed);
+        controlsToggle.setAttribute('aria-pressed', String(controlsCollapsed));
+        controlsToggle.setAttribute('aria-label', controlsCollapsed ? 'Boshqaruvlarni qayta ochish' : 'Boshqaruvlarni burchakka yig\'ish');
+        controlsToggle.title = controlsCollapsed ? 'Boshqaruvlarni qayta ochish' : 'Boshqaruvlarni yig\'ish';
+        if (controlsCollapsed) {
+          var closing = groups.map(function (group, index) {
+            var rect = group.getBoundingClientRect();
+            var dx = anchorX - (rect.left + rect.width / 2), dy = anchorY - (rect.top + rect.height / 2);
+            return group.animate([
+              { opacity: 1, transform: 'translate(0,0) scale(1) rotate(0deg)' },
+              { opacity: 0, transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.12) rotate(10deg)' }
+            ], { duration: 420, delay: index * 55, easing: 'cubic-bezier(.55,0,.9,.35)', fill: 'forwards' })
+          });
+          controlsAnimations = closing;
+          Promise.all(closing.map(function (animation) { return animation.finished.catch(function () { }) })).then(function () {
+            if (animationId !== controlsAnimationId || !controlsCollapsed) return;
+            ui.classList.add('controls-collapsed');
+            closing.forEach(function (animation) { animation.cancel() });
+            controlsAnimations = []
+          });
+          return
+        }
+        ui.classList.remove('controls-collapsed');
+        var opening = visibleControlGroups().map(function (group, index) {
+          var rect = group.getBoundingClientRect();
+          var dx = anchorX - (rect.left + rect.width / 2), dy = anchorY - (rect.top + rect.height / 2);
+          return group.animate([
+            { opacity: 0, transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.12) rotate(-10deg)' },
+            { opacity: 1, transform: 'translate(0,0) scale(1) rotate(0deg)' }
+          ], { duration: 440, delay: index * 55, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'both' })
+        });
+        controlsAnimations = opening;
+        Promise.all(opening.map(function (animation) { return animation.finished.catch(function () { }) })).then(function () {
+          if (animationId !== controlsAnimationId || controlsCollapsed) return;
+          opening.forEach(function (animation) { animation.cancel() });
+          controlsAnimations = [];
+          showUI()
+        })
+      }
+      controlsToggle.addEventListener('click', toggleControls);
+      function setHelpOpen(open) {
+        helpOverlay.hidden = !open;
+        helpButton.setAttribute('aria-expanded', String(open));
+        if (open) helpDialog.focus();
+        else helpButton.focus()
+      }
+      helpButton.addEventListener('click', function () { setHelpOpen(true) });
+      $('helpClose').addEventListener('click', function () { setHelpOpen(false) });
+      helpOverlay.addEventListener('click', function (event) { if (event.target === helpOverlay) setHelpOpen(false) });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !helpOverlay.hidden) setHelpOpen(false)
+      });
       var titleEditButton = $('titleEditButton'), titleEditorPanel = $('titleEditorPanel'), titleArtistInput = $('titleArtistInput'), titleTextInput = $('titleTextInput');
+      var titleSizeRange = $('titleSizeRange'), titleSizeValue = $('titleSizeValue'), titleScale = 100;
       var currentTitleKey = '', currentTitleTags = null, currentTitleName = '', currentArtistName = '';
       function syncTitleEditButton() {
         titleEditButton.hidden = !(live && paused);
@@ -1024,6 +1328,9 @@
         if (!live || !paused) return;
         titleArtistInput.value = currentArtistName;
         titleTextInput.value = currentTitleName;
+        titleSizeRange.value = titleScale;
+        titleSizeValue.value = titleScale + '%';
+        titleSizeValue.textContent = titleScale + '%';
         titleEditorPanel.hidden = false;
         titleTextInput.focus()
       }
@@ -1041,7 +1348,8 @@
         if (!live || !paused || !currentTitleKey) return;
         var title = titleTextInput.value.trim(), artist = titleArtistInput.value.trim();
         if (!title) { titleTextInput.focus(); return }
-        try { localStorage.setItem(currentTitleKey, JSON.stringify({ title: title, artist: artist })) }
+        titleScale = Math.max(70, Math.min(125, +titleSizeRange.value || 100));
+        try { localStorage.setItem(currentTitleKey, JSON.stringify({ title: title, artist: artist, scale: titleScale })) }
         catch (error) { msg.textContent = 'Sarlavha saqlanmadi. Brauzer xotirasini tekshiring.'; return }
         currentTitleName = title;
         currentArtistName = artist;
@@ -1051,6 +1359,14 @@
         fitTitle(title, artist);
         closeTitleEditor()
       });
+      titleSizeRange.addEventListener('input', function () {
+        titleScale = Math.max(70, Math.min(125, +titleSizeRange.value || 100));
+        titleSizeValue.value = titleScale + '%';
+        titleSizeValue.textContent = titleScale + '%';
+        fitTitle(titleTextInput.value || currentTitleName, titleArtistInput.value)
+      });
+      titleTextInput.addEventListener('input', function () { fitTitle(titleTextInput.value || currentTitleName, titleArtistInput.value) });
+      titleArtistInput.addEventListener('input', function () { fitTitle(titleTextInput.value || currentTitleName, titleArtistInput.value) });
       titleTextInput.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' && event.shiftKey) { event.preventDefault(); insertTitleNewline() }
         else if (event.key === 'Enter') { event.preventDefault(); $('titleSave').click() }
@@ -1273,7 +1589,11 @@
         currentTitleTags = tg;
         try {
           var savedTitle = JSON.parse(localStorage.getItem(currentTitleKey) || 'null');
-          if (savedTitle) { ti = savedTitle.title || ti; ar = savedTitle.artist != null ? savedTitle.artist : ar }
+          if (savedTitle) {
+            ti = savedTitle.title || ti;
+            ar = savedTitle.artist != null ? savedTitle.artist : ar;
+            titleScale = Math.max(70, Math.min(125, +savedTitle.scale || 100))
+          } else titleScale = 100
         } catch (e) { }
         currentTitleName = ti;
         currentArtistName = ar;
@@ -1311,7 +1631,7 @@
             var row = document.createElement('div'); row.className = 'tr';
             function mk(txt, lab, fn, dis) { var x = document.createElement('button'); x.className = 'dl'; x.textContent = txt; x.title = lab; x.setAttribute('aria-label', lab); x.disabled = !!dis; x.onclick = fn; return x }
             var b = document.createElement('button'); b.className = 'pl' + (t.id === curId ? ' on' : ''); b.textContent = (i + 1) + '. ' + (t.id === curId ? '\u25b6 ' : '') + disp(t.name);
-            b.onclick = function () { curId = t.id; playTrack(t); renderLib() };
+            b.onclick = function () { curId = t.id; playTrack(t); togglePanel($('lib'), false) };
             row.appendChild(b);
             row.appendChild(mk('\u25b2', 'Yuqoriga', function () { moveT(list, i, -1) }, i === 0));
             row.appendChild(mk('\u25bc', 'Pastga', function () { moveT(list, i, 1) }, i === list.length - 1));
@@ -1327,7 +1647,16 @@
           panel.animate([{ opacity: 0, transform: 'translateY(10px) scale(.98)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.8,.2,1)' });
           return;
         }
-        var animation = panel.animate([{ opacity: 1, transform: 'translateY(0) scale(1)' }, { opacity: 0, transform: 'translateY(10px) scale(.98)' }], { duration: 200, easing: 'ease-in' });
+        var animation;
+        if (panel.id === 'lib') {
+          var height = panel.getBoundingClientRect().height;
+          animation = panel.animate([
+            { height: height + 'px', paddingTop: '8px', paddingBottom: '8px', borderTopWidth: '1px', borderBottomWidth: '1px', opacity: 1, transform: 'translateY(0) scale(1)' },
+            { height: '0px', paddingTop: '0px', paddingBottom: '0px', borderTopWidth: '0px', borderBottomWidth: '0px', opacity: 0, transform: 'translateY(8px) scale(.98)' }
+          ], { duration: 260, easing: 'cubic-bezier(.4,0,.2,1)' });
+        } else {
+          animation = panel.animate([{ opacity: 1, transform: 'translateY(0) scale(1)' }, { opacity: 0, transform: 'translateY(10px) scale(.98)' }], { duration: 200, easing: 'ease-in' });
+        }
         animation.onfinish = function () {
           if (panel.id === 'more') panel.classList.remove('open');
           else panel.hidden = true;
@@ -1532,8 +1861,11 @@
       var mc = document.createElement('canvas').getContext('2d'), curTi = '', curAr = '', fsDone = false, minuteMark = 0;
       function fitTitle(ti, ar) {
         curTi = ti; curAr = ar; var aw = innerWidth * .9;
-        mc.font = '900 100px Unbounded,system-ui,sans-serif'; var w1 = mc.measureText(ti.replace(/\n/g, '')).width || 100;
-        h.style.fontSize = Math.max(14, Math.min(innerWidth * .17, innerHeight * .2, aw / w1 * 100)) + 'px';
+        mc.font = '900 100px Unbounded,system-ui,sans-serif';
+        var titleLines = ti.split('\n'), w1 = Math.max.apply(null, titleLines.map(function (line) { return mc.measureText(line).width || 100 }));
+        var fitSize = Math.min(innerWidth * .17, innerHeight * .2 / titleLines.length, aw / w1 * 100);
+        var baseSize = Math.max(14, fitSize), maxFitSize = Math.max(14, fitSize);
+        h.style.fontSize = Math.min(baseSize * titleScale / 100, maxFitSize) + 'px';
         mc.font = '300 100px Unbounded,system-ui,sans-serif'; var w2 = (mc.measureText(ar).width || 100) + ar.length * 40;
         ah.style.fontSize = Math.max(10, Math.min(26, innerWidth * .032, aw / Math.max(w2, 1) * 100)) + 'px'
       }
