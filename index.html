@@ -77,6 +77,7 @@
       font-weight: 900;
       font-size: 8vw;
       perspective: 900px;
+      transform-style: preserve-3d;
       line-height: 1.1;
       text-shadow: -3px 0 var(--magenta), 3px 0 var(--ice), 0 0 40px var(--violet)
     }
@@ -308,8 +309,25 @@
       display: inline-block;
       white-space: pre;
       transform-origin: 50% 100%;
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
       animation: letIn 1s cubic-bezier(.2, .9, .25, 1.15) both;
       animation-delay: calc(var(--i)*55ms)
+    }
+
+    #h .ch.minute-x {
+      animation: minuteX var(--spin-time, 1.4s) cubic-bezier(.2, .8, .2, 1) both;
+      animation-delay: var(--spin-delay, 0ms)
+    }
+
+    #h .ch.minute-y {
+      animation: minuteY var(--spin-time, 1.4s) cubic-bezier(.2, .8, .2, 1) both;
+      animation-delay: var(--spin-delay, 0ms)
+    }
+
+    #h .ch.ending {
+      animation: letterEnd 1.25s cubic-bezier(.6, 0, .8, .2) both;
+      animation-delay: calc(var(--i)*32ms)
     }
 
     @keyframes letIn {
@@ -325,6 +343,51 @@
       100% {
         opacity: 1;
         transform: none
+      }
+    }
+
+    @keyframes minuteX {
+      0% {
+        transform: rotateX(0)
+      }
+
+      48% {
+        transform: rotateX(var(--spin-angle, 720deg))
+      }
+
+      100% {
+        transform: rotateX(0)
+      }
+    }
+
+    @keyframes minuteY {
+      0% {
+        transform: rotateY(0)
+      }
+
+      48% {
+        transform: rotateY(var(--spin-angle, 720deg))
+      }
+
+      100% {
+        transform: rotateY(0)
+      }
+    }
+
+    @keyframes letterEnd {
+      0% {
+        opacity: 1;
+        transform: rotateY(0) translateZ(0)
+      }
+
+      45% {
+        opacity: 1;
+        transform: rotateY(210deg) translateZ(80px) scale(1.25)
+      }
+
+      100% {
+        opacity: 0;
+        transform: rotateY(720deg) translateZ(-260px) scale(.05)
       }
     }
 
@@ -347,6 +410,9 @@
     @media (prefers-reduced-motion:reduce) {
 
       #h .ch,
+      #h .ch.minute-x,
+      #h .ch.minute-y,
+      #h .ch.ending,
       #ar.a3 {
         animation: none
       }
@@ -408,6 +474,67 @@
 
       .rng input {
         width: 90px
+      }
+    }
+
+    button,
+    .btn,
+    .rng,
+    #lib,
+    #pn,
+    #more {
+      transition: background-color .2s ease, border-color .2s ease, transform .22s ease, opacity .22s ease;
+    }
+
+    button:active,
+    .btn:active {
+      transform: scale(.96)
+    }
+
+    #ui.hide {
+      pointer-events: none
+    }
+
+    @media (orientation: landscape) and (max-height: 520px) {
+      #ui {
+        max-height: 48dvh;
+        overflow-y: auto;
+        gap: 4px;
+        padding: 5px 10px calc(5px + env(safe-area-inset-bottom, 0px));
+        align-content: center
+      }
+
+      #ui button,
+      #ui .btn,
+      #ui .rng {
+        font-size: clamp(.58rem, 2.3vh, .72rem);
+        padding: .48em .8em
+      }
+
+      #more,
+      #pn {
+        gap: 5px
+      }
+
+      #more {
+        max-height: 22dvh;
+        overflow-y: auto
+      }
+
+      #lib {
+        max-height: 28dvh
+      }
+
+      #tp {
+        gap: 5px
+      }
+
+      #tp input[type=range] {
+        width: min(30vw, 220px)
+      }
+
+      .rng input {
+        width: min(12vw, 76px)
       }
     }
   </style>
@@ -540,7 +667,7 @@
         var nm = fn.replace(/\.[^.]+$/, '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim(), ti = nm, ar = '', ix = nm.indexOf(' - ');
         if (ix > 0) { ar = nm.slice(0, ix).trim(); ti = nm.slice(ix + 3).trim() }
         if (tg.title && tg.artist) { ti = tg.title; ar = tg.artist }
-        h3d(ti); ah.textContent = ar; ah.classList.remove('a3'); void ah.offsetWidth; ah.classList.add('a3');
+        h3d(ti); minuteMark = ac ? Math.floor((ac.currentTime - t0a) / 60) : 0; ah.textContent = ar; ah.classList.remove('a3'); void ah.offsetWidth; ah.classList.add('a3');
         fitTitle(ti, ar);
 
       }
@@ -580,7 +707,20 @@
           })
         })
       }
-      $('lb').onclick = function () { var l = $('lib'); l.hidden = !l.hidden; if (!l.hidden) renderLib(); showUI() };
+      function togglePanel(panel, open) {
+        if (open) {
+          panel.hidden = false;
+          if (panel.id === 'more') panel.classList.add('open');
+          panel.animate([{ opacity: 0, transform: 'translateY(10px) scale(.98)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 240, easing: 'cubic-bezier(.2,.8,.2,1)' });
+          return;
+        }
+        var animation = panel.animate([{ opacity: 1, transform: 'translateY(0) scale(1)' }, { opacity: 0, transform: 'translateY(10px) scale(.98)' }], { duration: 200, easing: 'ease-in' });
+        animation.onfinish = function () {
+          if (panel.id === 'more') panel.classList.remove('open');
+          else panel.hidden = true;
+        };
+      }
+      $('lb').onclick = function () { var l = $('lib'); togglePanel(l, l.hidden); if (!l.hidden) renderLib(); showUI() };
       function playFile(file, fromLib) {
         if (!file) return; if (!fromLib) saveTrack(file);
         msg.textContent = 'Yuklanmoqda…';
@@ -614,8 +754,12 @@
       cN.oninput = function () { P.amt = cN.value / 100; cNv.textContent = cN.value + '%'; saveC() };
       cC.onchange = function () { P.col = cC.value; saveC() };
       cS.oninput = function () { P.sh = cS.value / 100; cSv.textContent = cS.value + '%'; saveC() };
-      $('cm').onclick = function () { pn_.hidden = !pn_.hidden; showUI() };
-      document.addEventListener('pointermove', showUI); document.addEventListener('pointerdown', showUI);
+      $('cm').onclick = function () { togglePanel(pn_, pn_.hidden); showUI() };
+      document.addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse') showUI() });
+      cv.addEventListener('pointerdown', function () {
+        if (ui.classList.contains('hide')) showUI();
+        else { clearTimeout(hideT); ui.classList.add('hide') }
+      });
 
       /* ===== Taymer, keyingi/oldingi, takror rejimlari, tartib, yangi shakllar ===== */
       var RM = 0, curBuf = null, t0a = 0, dragSk = false, rp = 0;
@@ -645,7 +789,14 @@
         src.connect(an); src.connect(an2); src.start(0, off); t0a = ac.currentTime - off; updT()
       }
       function mkEnd(s) { return function () { if (src === s) trackEnded() } }
-      function trackEnded() { if (RM === 1) step(1); else if (RM === 2) step(-1) }
+      function trackEnded() {
+        finishTitle();
+        var endedSrc = src;
+        setTimeout(function () {
+          if (src !== endedSrc) return;
+          if (RM === 1) step(1); else if (RM === 2) step(-1)
+        }, reduce ? 0 : 1300)
+      }
       sk.addEventListener('pointerdown', function () { dragSk = true });
       sk.addEventListener('pointercancel', function () { dragSk = false });
       sk.addEventListener('input', function () { if (curBuf) tmEl.textContent = fmt(sk.value / 1000 * curBuf.duration) });
@@ -684,10 +835,10 @@
         { n: 'Kosmos', bg: '5,1,13', v: '107,44,255', m: '255,46,136', i: '159,232,255', w: '244,234,255', e: '255,122,46', l: '190,150,255', c: ['40,255,110', '255,225,50', '60,200,255'], s: '255,10,25', k0: '28,10,61', k1: '3,0,8' },
         { n: 'Qizil', bg: '10,2,3', v: '200,20,40', m: '255,70,50', i: '255,170,150', w: '255,236,230', e: '255,150,40', l: '255,110,110', c: ['255,120,30', '255,200,60', '255,70,70'], s: '255,10,25', k0: '60,8,12', k1: '6,0,1' },
         { n: 'Zumrad', bg: '1,8,5', v: '20,160,90', m: '60,255,150', i: '150,255,210', w: '225,255,240', e: '200,255,80', l: '110,230,170', c: ['60,255,150', '200,255,80', '40,220,200'], s: '255,10,25', k0: '8,50,32', k1: '0,6,3' },
-        { n: 'Okean', bg: '2,6,16', v: '30,90,255', m: '0,200,255', i: '150,215,255', w: '230,242,255', e: '90,160,255', l: '110,170,255', c: ['0,220,255', '80,140,255', '120,255,230'], s: '255,10,25', k0: '10,30,80', k1: '0,4,14' },
+        { n: 'Okean', bg: '2,6,16', v: '30,90,255', m: '0,200,255', i: '150,215,255', w: '230,242,255', e: '90,160,255', l: '110,170,255', c: ['0,220,255', '80,140,255', '120,255,230'], s: '30,90,255', k0: '10,30,80', k1: '0,4,14' },
         { n: 'Oltin', bg: '8,5,1', v: '200,130,10', m: '255,180,40', i: '255,225,150', w: '255,246,225', e: '255,120,30', l: '255,200,100', c: ['255,190,40', '255,240,120', '255,130,40'], s: '255,10,25', k0: '60,38,6', k1: '6,3,0' },
         { n: 'Toksik', bg: '4,1,10', v: '140,40,255', m: '190,255,0', i: '200,255,120', w: '240,255,220', e: '190,255,0', l: '190,120,255', c: ['190,255,0', '255,40,200', '120,255,60'], s: '255,10,25', k0: '40,8,70', k1: '3,0,8' },
-        { n: 'Kumush', bg: '4,4,6', v: '120,120,140', m: '200,200,215', i: '235,235,245', w: '250,250,252', e: '170,170,185', l: '180,180,200', c: ['230,230,245', '190,190,210', '255,255,255'], s: '255,10,25', k0: '40,40,52', k1: '2,2,4' }
+        { n: 'Kumush', bg: '4,4,6', v: '120,120,140', m: '200,200,215', i: '235,235,245', w: '250,250,252', e: '170,170,185', l: '180,180,200', c: ['230,230,245', '190,190,210', '255,255,255'], s: '128,128,128', k0: '40,40,52', k1: '2,2,4' }
       ], T = THEMES[0], TI = 0;
       function applyTheme(k) {
         TI = k; T = THEMES[k];
@@ -706,7 +857,7 @@
       try { var sth = parseInt(localStorage.getItem('polisha-th')); if (sth >= 0 && sth < THEMES.length) TI = sth } catch (e) { }
       applyTheme(TI);
       /* ===== 3D sarlavha, moslashuvchan o'lcham, avto to'liq ekran, sozlamalar paneli ===== */
-      var mc = document.createElement('canvas').getContext('2d'), curTi = '', curAr = '', fsDone = false;
+      var mc = document.createElement('canvas').getContext('2d'), curTi = '', curAr = '', fsDone = false, minuteMark = 0;
       function fitTitle(ti, ar) {
         curTi = ti; curAr = ar; var aw = innerWidth * .9;
         mc.font = '900 100px Unbounded,system-ui,sans-serif'; var w1 = mc.measureText(ti).width || 100;
@@ -715,6 +866,17 @@
         ah.style.fontSize = Math.max(10, Math.min(26, innerWidth * .032, aw / Math.max(w2, 1) * 100)) + 'px'
       }
       function h3d(ti) { h.textContent = ''; Array.from(ti).forEach(function (c, i) { var sp_ = document.createElement('span'); sp_.className = 'ch'; sp_.style.setProperty('--i', i); sp_.textContent = c; h.appendChild(sp_) }) }
+      function spinTitle() {
+        Array.from(h.querySelectorAll('.ch')).forEach(function (letter, i) {
+          letter.classList.remove('minute-x', 'minute-y', 'ending');
+          letter.style.setProperty('--spin-angle', (720 + Math.floor(Math.random() * 3) * 360) + 'deg');
+          letter.style.setProperty('--spin-time', (1.1 + Math.random() * .9) + 's');
+          letter.style.setProperty('--spin-delay', (Math.random() * 180 + i * 18) + 'ms');
+          letter.classList.add(Math.random() < .5 ? 'minute-x' : 'minute-y')
+        });
+        void h.offsetWidth
+      }
+      function finishTitle() { h.querySelectorAll('.ch').forEach(function (letter) { letter.classList.remove('minute-x', 'minute-y'); letter.classList.add('ending') }) }
       addEventListener('resize', function () { fitTitle(curTi, curAr) });
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fitTitle(curTi, curAr) });
       fitTitle(h.textContent, ah.textContent);
@@ -723,7 +885,7 @@
         try { var r = f.call(d); if (r && r.then) r.then(function () { fsDone = true }, function () { }); else fsDone = true } catch (e) { }
       }
       ['pointerup', 'keydown', 'touchend'].forEach(function (ev) { document.addEventListener(ev, autoFS, { passive: true }) });
-      $('mb').onclick = function () { var mo = $('more'); mo.classList.toggle('open'); this.setAttribute('aria-expanded', mo.classList.contains('open')); showUI() };
+      $('mb').onclick = function () { var mo = $('more'), open = !mo.classList.contains('open'); togglePanel(mo, open); this.setAttribute('aria-expanded', open); showUI() };
       function band(a, b) { var s = 0; for (var i = a; i < b; i++)s += data[i]; return s / ((b - a) * 255) }
       function sm(v, t, up, dn) { return v + (t - v) * (t > v ? up : dn) }
 
@@ -757,6 +919,7 @@
       function frame(now) {
         requestAnimationFrame(frame);
         var dt = Math.min((now - last) / 16.67, 3); last = now; var t = (now - t0) / 1000, tb, tm, th;
+        if (live && !paused && ac) { var elapsedMinute = Math.floor((ac.currentTime - t0a) / 60); if (elapsedMinute > minuteMark) { minuteMark = elapsedMinute; spinTitle() } }
         if (live && an && !paused) { an.getByteFrequencyData(data); an2.getByteFrequencyData(data2); tb = band(1, 7); tm = band(7, 60); th = band(60, 200); rb = 0; for (var i = 1; i < 7; i++)rb += data2[i]; rb /= 1530 }
         else if (!live) { tb = .22 + .1 * Math.sin(t * 1.4); tm = .2 + .08 * Math.sin(t * .9); th = .15; for (var i = 0; i < 512; i++)data[i] = (.25 + .2 * Math.sin(i * .12 + t * 2)) * 140 }
         else { tb = bass; tm = mid; th = high }
@@ -782,7 +945,8 @@
         var cols = T.c, RED = T.s;
         for (var k = 0; k < 3 && (gC > .01 || gR > .01); k++) {
           var ang = spin * (k + 1) * 1.5 + k * 2.1, rr = m * (.28 + .1 * k) * (1 + K * bass * .25), x = cx + Math.cos(ang) * rr, y = cy + Math.sin(ang * 1.2) * rr * .7, R = m * (.55 + K * bass * .25);
-          var lst = [[cols[(gi + k) % 3], Math.min(.3, gC * .24 * K), R], [RED, Math.min(.55, gR * .42 * K), R * 1.35]]; for (var z = 0; z < 2; z++) { if (lst[z][1] < .01) continue; var g = ctx.createRadialGradient(x, y, 0, x, y, lst[z][2]); g.addColorStop(0, 'rgba(' + lst[z][0] + ',' + lst[z][1] + ')'); g.addColorStop(1, 'rgba(' + lst[z][0] + ',0)'); ctx.fillStyle = g; ctx.fillRect(-W, -H, 3 * W, 3 * H) }
+          var flashRadius = TI === 3 || TI === 6 ? R * .65 : R * 1.35;
+          var lst = [[cols[(gi + k) % 3], Math.min(.3, gC * .24 * K), R], [RED, Math.min(.55, gR * .42 * K), flashRadius]]; for (var z = 0; z < 2; z++) { if (lst[z][1] < .01) continue; var g = ctx.createRadialGradient(x, y, 0, x, y, lst[z][2]); g.addColorStop(0, 'rgba(' + lst[z][0] + ',' + lst[z][1] + ')'); g.addColorStop(1, 'rgba(' + lst[z][0] + ',0)'); ctx.fillStyle = g; ctx.fillRect(-W, -H, 3 * W, 3 * H) }
 
 
         }
