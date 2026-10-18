@@ -2097,6 +2097,25 @@
           letter.classList.add(Math.random() < .5 ? 'minute-x' : 'minute-y')
         })
       }
+      /* ===== Yig'ilgandan keyin ↙ tugmasi ham silliq yo'qolsin, ekranga tegilsa qaytsin ===== */
+      var tbHideT = 0, tbFadeT = 0, tbWasCollapsed = false;
+      controlsToggle.style.transition = 'transform .25s ease, background-color .2s ease, opacity .6s ease';
+      function tbHide() {
+        clearTimeout(tbHideT); clearTimeout(tbFadeT);
+        controlsToggle.style.opacity = '0'; controlsToggle.style.pointerEvents = 'none';
+        tbFadeT = setTimeout(function () { controlsToggle.style.visibility = 'hidden' }, 650)
+      }
+      function tbShow(auto) {
+        clearTimeout(tbHideT); clearTimeout(tbFadeT);
+        controlsToggle.style.visibility = 'visible'; controlsToggle.style.pointerEvents = 'auto'; controlsToggle.style.opacity = '1';
+        if (auto) tbHideT = setTimeout(tbHide, 3000)
+      }
+      new MutationObserver(function () {
+        var c = ui.classList.contains('controls-collapsed');
+        if (c === tbWasCollapsed) return; tbWasCollapsed = c;
+        if (c) { clearTimeout(tbHideT); tbHideT = setTimeout(tbHide, 700) } else tbShow(false)
+      }).observe(ui, { attributes: true, attributeFilter: ['class'] });
+      cv.addEventListener('pointerdown', function () { if (ui.classList.contains('controls-collapsed')) tbShow(true) });
       requestAnimationFrame(frame);
     })();
   </script>
