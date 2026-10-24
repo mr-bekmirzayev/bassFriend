@@ -4,8 +4,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#05010d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>AuraMB</title>
   <link rel="icon" href="./siteLogo.png">
+  <link rel="manifest" href="./manifest.json">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;900&display=swap">
   <style>
     :root {
@@ -256,7 +260,40 @@
 
     #sw {
       display: flex;
-      gap: 8px
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center
+    }
+
+    #themeWrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    #themeToggle {
+      display: none;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, .35);
+      background: linear-gradient(135deg, var(--violet), var(--magenta) 55%, var(--ice));
+      font-size: 1.05rem;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0
+    }
+
+    #themeToggle[aria-expanded="true"] {
+      border-color: var(--ice);
+      box-shadow: 0 0 12px var(--ice)
+    }
+
+    #themePopover {
+      display: contents
     }
 
     #autoTheme {
@@ -428,11 +465,41 @@
       left: 0;
       right: 0;
       top: calc(14px + env(safe-area-inset-top, 0px));
-      text-align: center;
+      text-align: start;
       font-weight: 300;
       font-size: .8rem;
       opacity: .8;
-      padding: 0 16px
+      padding: 0 16px;
+      transition: opacity .35s ease, transform .35s ease, max-width .35s ease, right .35s ease
+    }
+
+    /* Bo'sh xabar — ekranda yo'q, joy egallamaydi */
+    #msg:empty {
+      display: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      pointer-events: none !important
+    }
+
+    /* Fayl tortib tashlash indikatori */
+    html.file-drag body::after {
+      content: 'Musiqani shu yerga tashlang';
+      position: fixed;
+      inset: 12px;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      border: 2px dashed var(--ice);
+      border-radius: 18px;
+      background: rgba(5, 1, 13, .72);
+      color: var(--text);
+      font: 300 1rem/1.4 "Unbounded", system-ui, sans-serif;
+      pointer-events: none;
+      backdrop-filter: blur(6px)
     }
 
     #h .ch {
@@ -562,28 +629,249 @@
       display: none
     }
 
-    @media (max-width:699px) {
+    @media (max-width:699px), (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
       #ui {
-        gap: 6px;
-        padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px))
+        gap: 8px;
+        padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+        max-height: none;
+        overflow: visible;
+        align-content: flex-end
       }
 
       button,
       .btn,
       .rng {
-        font-size: .72rem;
-        padding: .6em 1em
+        font-size: .7rem;
+        padding: .55em .85em
       }
 
       #more {
         display: none;
-        gap: 6px;
-        max-height: 36vh;
-        overflow-y: auto
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        border: 1px solid var(--bd2);
+        border-radius: 16px;
+        background: var(--panel);
+        gap: 8px;
+        overflow: visible
       }
 
       #more.open {
-        display: flex
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-auto-rows: minmax(44px, auto);
+        align-items: stretch
+      }
+
+      #more.open > .rng,
+      #more.open > button,
+      #more.open > #themeWrap {
+        margin: 0;
+        min-width: 0;
+        width: auto;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: .55em .7em;
+        border-radius: 12px;
+        background: var(--btn);
+        border: 1px solid var(--bd);
+        overflow: hidden;
+        transition: background-color .25s ease, border-color .25s ease, transform .22s ease, opacity .25s ease
+      }
+
+      /* Mavzu katagida overflow ochiq — ranglar tepaga chiqsin */
+      #more.open > #themeWrap {
+        overflow: visible
+      }
+
+      #more.open > .rng {
+        justify-content: space-between;
+        cursor: default
+      }
+
+      #more.open .rng-lab {
+        flex-shrink: 0;
+        font-size: .62rem;
+        opacity: .88;
+        letter-spacing: .02em;
+        max-width: 3.6em;
+        overflow: hidden;
+        white-space: nowrap
+      }
+
+      #more.open .rng-lab[data-short]::before {
+        content: attr(data-short)
+      }
+
+      #more.open .rng-lab[data-short] {
+        font-size: 0
+      }
+
+      #more.open .rng-lab[data-short]::before {
+        font-size: .62rem
+      }
+
+      .btn-short {
+        display: none
+      }
+
+      #more.open .btn-full {
+        display: none
+      }
+
+      #more.open .btn-short {
+        display: inline
+      }
+
+      /* label text nodes: first text is often not wrapped — target via flex children */
+      #more.open > .rng input[type=range] {
+        width: 0;
+        flex: 1 1 auto;
+        min-width: 48px;
+        max-width: 100%
+      }
+
+      #more.open > .rng output {
+        min-width: 2.4em;
+        font-size: .62rem;
+        flex-shrink: 0
+      }
+
+      #more.open > .rng select {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: 100%;
+        font-size: .65rem;
+        text-overflow: ellipsis
+      }
+
+      #more.open > button {
+        font-size: .68rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+      }
+
+      /* Mavzu katak: faqat oy — overflow visible muhim */
+      #more.open > #themeWrap {
+        position: relative;
+        z-index: 30;
+        justify-content: center;
+        gap: 0;
+        padding: 0;
+        background: transparent;
+        border: 0;
+        overflow: visible
+      }
+
+      #themeWrap > span:first-child,
+      #themeWrap > .rng-lab {
+        display: none
+      }
+
+      #themeToggle {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, .45);
+        font-size: 1.15rem;
+        line-height: 1;
+        box-shadow: 0 0 14px rgba(0, 0, 0, .25);
+        transition: transform .22s ease, box-shadow .25s ease, border-color .25s ease
+      }
+
+      #themeToggle:active {
+        transform: scale(.94)
+      }
+
+      /* Ranglar — o'sha tugmadan tepaga sochiladi */
+      #themePopover {
+        display: flex;
+        position: absolute;
+        bottom: calc(100% + 12px);
+        left: 50%;
+        z-index: 40;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: max-content;
+        max-width: min(92vw, 300px);
+        padding: 12px 14px;
+        border: 1px solid var(--bd2);
+        border-radius: 16px;
+        background: var(--panel);
+        box-shadow: 0 10px 32px rgba(0, 0, 0, .5);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateX(-50%) translateY(12px) scale(.9);
+        transition: opacity .28s cubic-bezier(.2, .8, .2, 1), transform .28s cubic-bezier(.2, .8, .2, 1), visibility .28s
+      }
+
+      #themePopover.open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateX(-50%) translateY(0) scale(1)
+      }
+
+      #themePopover #sw {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center
+      }
+
+      #themePopover #sw .sw {
+        width: 28px;
+        height: 28px;
+        transition: transform .2s ease, box-shadow .2s ease
+      }
+
+      #themePopover #sw .sw:active {
+        transform: scale(1.12)
+      }
+
+      #themePopover #autoTheme {
+        width: 32px;
+        height: 32px
+      }
+
+      #themePopover #autoThemeInterval {
+        max-width: 70px;
+        font-size: .65rem
+      }
+
+      /* Yuqori xabar — mobil qoida pastroqda (o'ng tugmalar uchun) */
+
+      #more {
+        transition: opacity .28s ease, transform .28s ease
+      }
+
+      #more.open {
+        animation: moreSheetIn .28s cubic-bezier(.2, .8, .2, 1) both
+      }
+
+      @keyframes moreSheetIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(.98)
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1)
+        }
       }
 
       #mb {
@@ -591,19 +879,25 @@
       }
 
       #mr {
-        gap: 6px
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center
       }
 
       #tp {
-        gap: 6px
+        gap: 6px;
+        flex-wrap: nowrap;
+        width: 100%
       }
 
       #tp input[type=range] {
-        width: min(38vw, 240px)
+        width: auto;
+        flex: 1 1 auto;
+        min-width: 80px
       }
 
       .rng input {
-        width: 90px
+        width: 80px
       }
     }
 
@@ -656,11 +950,33 @@
       }
 
       #tp {
-        gap: 5px
+        gap: 8px;
+        align-items: center
       }
 
+      /* Timer biroz kichikroq; ⏮ ⏭ kattaroq */
       #tp input[type=range] {
-        width: min(30vw, 220px)
+        width: min(36vw, 240px);
+        height: 4px;
+        flex: 1 1 auto
+      }
+
+      #tp #pv,
+      #tp #nx {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        padding: 0;
+        font-size: 1.25rem;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0
+      }
+
+      #tp #tm,
+      #tp #td {
+        font-size: .62rem;
+        min-width: 2.4em
       }
 
       .rng input {
@@ -680,14 +996,27 @@
 
     .lyrics-toggle {
       position: fixed;
-      background-color: white;
-      z-index: 5;
+      z-index: 8;
+      right: 14px;
+      bottom: 20px;
+      width: 42px;
+      height: 42px;
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 50px;
-      bottom: 20px;
-      right: 14px;
+      border-radius: 50%;
+      background: var(--btn);
+      border: 1px solid var(--bd);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .28)
+    }
+
+    .lyrics-toggle img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      display: block
     }
 
     .lyrics-panel {
@@ -854,20 +1183,20 @@
       color: #fff
     }
 
-    @media (max-width: 699px) {
+    @media (max-width: 699px), (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
       .lyrics-panel {
-        top: auto;
+        top: calc(64px + env(safe-area-inset-top, 0px));
         right: 10px;
-        bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+        bottom: auto;
         width: min(360px, calc(100vw - 20px));
-        max-height: 38vh;
+        max-height: min(42vh, 360px);
         transform: none;
       }
 
       @keyframes lyricsIn {
         from {
           opacity: 0;
-          transform: translateY(8px)
+          transform: translateY(-8px)
         }
 
         to {
@@ -889,16 +1218,28 @@
 
     #helpButton {
       position: fixed;
+      z-index: 8;
       right: 15px;
-      font-size: 25px;
-      padding: 8px 18px;
       bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      font-size: 1.15rem;
+      font-weight: 900;
+      line-height: 1;
+      background: var(--btn);
+      border: 1px solid var(--bd);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .28)
     }
 
     #controlsToggle {
       position: fixed;
       z-index: 9;
-      left: 64px;
+      left: 14px;
       bottom: calc(18px + env(safe-area-inset-bottom, 0px));
       width: 42px;
       height: 42px;
@@ -909,7 +1250,10 @@
       font-size: 1.15rem;
       line-height: 1;
       font-weight: 900;
+      background: var(--btn);
+      border: 1px solid var(--bd);
       backdrop-filter: blur(10px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .28);
       transition: transform .25s ease, background-color .2s ease;
     }
 
@@ -1015,12 +1359,71 @@
       margin: 4px 0
     }
 
-    @media (max-width: 699px) {
+    @media (max-width: 699px), (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+      /*
+        Wireframe:
+        [ title bar .............. ]  ( ?  ♫ ) [↗]
+        Yig'ilganda faqat o'ngdagi tugma; ochilganda ? va ♫ silliq chiqadi
+      */
+      #msg {
+        left: 12px;
+        right: 58px;
+        top: calc(12px + env(safe-area-inset-top, 0px));
+        width: auto;
+        max-width: calc(100vw - 70px);
+        text-align: start;
+        padding: 10px 14px;
+        font-size: .68rem;
+        line-height: 1.35;
+        border: 1px solid var(--bd2);
+        border-radius: 999px;
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, .28);
+        box-sizing: border-box;
+        z-index: 7;
+        pointer-events: none
+      }
+
+      /* Asosiy yig'ish tugmasi — doim o'ng yuqori */
       #controlsToggle {
-        left: 56px;
-        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-        width: 38px;
-        height: 38px;
+        top: calc(12px + env(safe-area-inset-top, 0px));
+        bottom: auto;
+        left: auto;
+        right: 12px;
+        width: 40px;
+        height: 40px;
+        z-index: 9
+      }
+
+      /* Ochilganda: ? va ♫ ↙ ning chapida qator */
+      #helpButton {
+        top: calc(12px + env(safe-area-inset-top, 0px));
+        bottom: auto;
+        right: 104px;
+        width: 40px;
+        height: 40px;
+        z-index: 8
+      }
+
+      .lyrics-toggle {
+        top: calc(12px + env(safe-area-inset-top, 0px));
+        bottom: auto;
+        right: 58px;
+        width: 40px;
+        height: 40px;
+        z-index: 8
+      }
+
+      /* Title bar ochilganda o'ngdagi 3 tugmaga joy */
+      body:not(.ui-tools-collapsed) #msg {
+        max-width: calc(100vw - 168px);
+        right: 156px
+      }
+
+      .lyrics-panel {
+        top: calc(64px + env(safe-area-inset-top, 0px));
+        right: 12px
       }
 
       #helpDialog {
@@ -1036,6 +1439,13 @@
     @media (prefers-reduced-motion: reduce) {
       #helpDialog {
         animation: none
+      }
+    }
+
+    /* Kengroq telefon: 3 ustun — yanada ixcham */
+    @media (max-width: 699px), (orientation: landscape) and (max-height: 520px) and (pointer: coarse) and (min-width: 420px), (orientation: landscape) and (max-height: 520px) and (pointer: coarse) and (min-width: 420px) {
+      #more.open {
+        grid-template-columns: repeat(3, minmax(0, 1fr))
       }
     }
   </style>
@@ -1170,9 +1580,9 @@
           id="cm-sv"></output></label>
     </div>
     <div id="more">
-      <label class="rng">Ta'sir kuchi<input type="range" id="k" min="0" max="200" step="5" value="100"><output
-          id="kv">100%</output></label>
-      <label class="rng">Bas shakli<select id="vz">
+      <label class="rng"><span class="rng-lab" data-short="Ta'sir">Ta'sir kuchi</span><input type="range" id="k"
+          min="0" max="200" step="5" value="100"><output id="kv">100%</output></label>
+      <label class="rng"><span class="rng-lab" data-short="Shakl">Bas shakli</span><select id="vz">
           <option value="0">Chiziqlar</option>
           <option value="1">To'lqin</option>
           <option value="2">Nuqtalar</option>
@@ -1183,20 +1593,27 @@
           <option value="7">Sonar</option>
           <option value="8">Ko'zgu</option>
         </select></label>
-      <div class="rng"><span>Mavzu</span><span id="sw"></span><button id="autoTheme" type="button"
-          aria-label="Avtomatik mavzu almashishini yoqish" aria-pressed="false"
-          title="Avtomatik mavzu">↻</button><select id="autoThemeInterval" aria-label="Mavzu almashish oralig'i"
-          title="Almashish oralig'i">
-          <option value="30">30 s</option>
-          <option value="60" selected>1 min</option>
-        </select></div>
-      <label class="rng">Takror<select id="rm">
+      <div class="rng" id="themeWrap">
+        <span class="rng-lab">Mavzu</span>
+        <button id="themeToggle" type="button" aria-label="Mavzuni tanlash" aria-expanded="false"
+          title="Mavzu">🌙</button>
+        <div id="themePopover">
+          <span id="sw"></span>
+          <button id="autoTheme" type="button" aria-label="Avtomatik mavzu almashishini yoqish" aria-pressed="false"
+            title="Avtomatik mavzu">↻</button>
+          <select id="autoThemeInterval" aria-label="Mavzu almashish oralig'i" title="Almashish oralig'i">
+            <option value="30">30 s</option>
+            <option value="60" selected>1 min</option>
+          </select>
+        </div>
+      </div>
+      <label class="rng"><span class="rng-lab" data-short="Takror">Takror</span><select id="rm">
           <option value="0">Bitta takror</option>
           <option value="1">Ro'yxat bo'yicha</option>
           <option value="2">Teskari ro'yxat</option>
           <option value="3">Takrorsiz</option>
         </select></label>
-      <button id="cm">Otilib chiquvchilar</button>
+      <button id="cm"><span class="btn-full">Otilib chiquvchilar</span><span class="btn-short">Zarrachalar</span></button>
       <button id="fs">To'liq ekran</button>
     </div>
     <div id="tp">
@@ -1290,6 +1707,7 @@
         clearTimeout(hideT);
         ui.classList.remove('hide');
         controlsToggle.classList.toggle('collapsed', controlsCollapsed);
+        document.body.classList.toggle('ui-tools-collapsed', controlsCollapsed);
         controlsToggle.setAttribute('aria-pressed', String(controlsCollapsed));
         controlsToggle.setAttribute('aria-label', controlsCollapsed ? 'Boshqaruvlarni qayta ochish' : 'Boshqaruvlarni burchakka yig\'ish');
         controlsToggle.title = controlsCollapsed ? 'Boshqaruvlarni qayta ochish' : 'Boshqaruvlarni yig\'ish';
@@ -1544,13 +1962,11 @@
           var saved = JSON.parse(localStorage.getItem(currentLyricsKey) || 'null');
           if (saved && (saved.syncedLyrics || saved.plainLyrics)) {
             showLyrics(saved, title, artist, 'siz saqlagan matn');
-            setLyricsPanel(true);
             return
           }
         } catch (error) { }
         lyricsStatus.textContent = 'So\'zlar qidirilmoqda…';
         lyricsContent.textContent = 'Bir nechta lyrics manbasidan qidirilmoqda. Audio fayl yuborilmaydi.';
-        setLyricsPanel(true);
         var params = new URLSearchParams({ track_name: title });
         if (artist) params.set('artist_name', artist);
         fetch('https://lrclib.net/api/search?' + params.toString(), { signal: lyricsAbort.signal, headers: { Accept: 'application/json' } })
@@ -1702,12 +2118,179 @@
             if (ac.state === 'suspended') ac.resume();
             live = true; paused = false; pp.disabled = false; pp.textContent = 'Pauza';
             setTitle(tg, file.name); lookupLyrics(tg, file.name, buf.duration); msg.textContent = ''; showUI();
+            updateMediaSession()
           }, function () { msg.textContent = "Faylni o'qib bo'lmadi. Boshqa audio fayl tanlang." });
         };
         r.readAsArrayBuffer(file);
       }
+      function isAudioFile(file) {
+        if (!file) return false;
+        if (file.type && file.type.indexOf('audio/') === 0) return true;
+        return /\.(mp3|m4a|aac|wav|ogg|flac|opus|webm|wma|aiff?)$/i.test(file.name || '')
+      }
+      function playIncomingFiles(fileList) {
+        var files = Array.prototype.filter.call(fileList || [], isAudioFile);
+        if (!files.length) {
+          msg.textContent = 'Audio fayl topilmadi';
+          showUI();
+          return false
+        }
+        for (var i = 0; i < files.length; i++) saveTrack(files[i]);
+        playFile(files[0], true);
+        return true
+      }
+      /* ===== Drag & drop (kompyuter) ===== */
+      var dropDepth = 0;
+      function setDropActive(on) {
+        document.documentElement.classList.toggle('file-drag', !!on)
+      }
+      window.addEventListener('dragenter', function (e) {
+        e.preventDefault();
+        dropDepth++;
+        setDropActive(true)
+      });
+      window.addEventListener('dragleave', function (e) {
+        e.preventDefault();
+        dropDepth = Math.max(0, dropDepth - 1);
+        if (!dropDepth) setDropActive(false)
+      });
+      window.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
+      });
+      window.addEventListener('drop', function (e) {
+        e.preventDefault();
+        dropDepth = 0;
+        setDropActive(false);
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+          playIncomingFiles(e.dataTransfer.files)
+        }
+      });
+      /* ===== Boshqa ilovadan ochish / launchQueue (WebToApp / PWA) ===== */
+      function handleLaunchFiles(files) {
+        if (files && files.length) playIncomingFiles(files)
+      }
+      if (window.launchQueue && window.LaunchParams) {
+        try {
+          window.launchQueue.setConsumer(function (params) {
+            if (!params || !params.files) return;
+            var pending = [], left = params.files.length;
+            if (!left) return;
+            params.files.forEach(function (handle) {
+              var done = function (file) {
+                if (file) pending.push(file);
+                left--;
+                if (!left && pending.length) handleLaunchFiles(pending)
+              };
+              try {
+                if (handle && handle.getFile) handle.getFile().then(done).catch(function () { done(null) });
+                else done(null)
+              } catch (err) { done(null) }
+            })
+          })
+        } catch (e) { }
+      }
+      /* Ba'zi WebView/WebToApp: window.openedFiles yoki intent orqali */
+      try {
+        if (window.openedFiles && window.openedFiles.length) handleLaunchFiles(window.openedFiles);
+        if (typeof window.setOpenedFiles === 'undefined') {
+          window.setOpenedFiles = function (list) { handleLaunchFiles(list) }
+        }
+      } catch (e) { }
       $('f').addEventListener('change', function (e) { playFile(e.target.files[0]); e.target.value = '' });
-      pp.onclick = function () { if (!ac) return; if (paused) { ac.resume(); pp.textContent = 'Pauza' } else { ac.suspend(); pp.textContent = 'Davom etish' } paused = !paused; syncTitleEditButton(); showUI() };
+      /* ===== Media Session: bildirishnoma / qulf ekrani tugmalari ===== */
+      var mediaSessionReady = false, mediaArtCache = '';
+      function mediaArtUrl() {
+        if (mediaArtCache) return mediaArtCache;
+        try {
+          var c = document.createElement('canvas'); c.width = c.height = 512;
+          var g = c.getContext('2d');
+          var gr = g.createLinearGradient(0, 40, 512, 480);
+          gr.addColorStop(0, '#05010d');
+          gr.addColorStop(.35, '#12061a');
+          gr.addColorStop(.62, '#ff2e8844');
+          gr.addColorStop(.82, '#9fe8ff55');
+          gr.addColorStop(1, '#05010d');
+          g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
+          var soft = g.createRadialGradient(256, 220, 20, 256, 260, 280);
+          soft.addColorStop(0, 'rgba(255,46,136,.35)');
+          soft.addColorStop(.55, 'rgba(159,232,255,.2)');
+          soft.addColorStop(1, 'rgba(5,1,13,0)');
+          g.fillStyle = soft; g.fillRect(0, 0, 512, 512);
+          mediaArtCache = c.toDataURL('image/png');
+          return mediaArtCache
+        } catch (e) {
+          return './siteLogo.png'
+        }
+      }
+      function updateMediaSession() {
+        if (!('mediaSession' in navigator)) return;
+        try {
+          var artSrc = mediaArtUrl();
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: currentTitleName || 'AuraMB',
+            artist: currentArtistName || 'AuraMB',
+            album: 'AuraMB',
+            artwork: [
+              { src: artSrc, sizes: '512x512', type: 'image/png' },
+              { src: artSrc, sizes: '256x256', type: 'image/png' }
+            ]
+          });
+          /* Pauzada ham tugmalar saqlanadi — faqat holat o'zgaradi */
+          navigator.mediaSession.playbackState = (!live) ? 'none' : (paused ? 'paused' : 'playing');
+          if (curBuf && navigator.mediaSession.setPositionState) {
+            try {
+              navigator.mediaSession.setPositionState({
+                duration: Math.max(curBuf.duration || 0, 0.1),
+                playbackRate: 1,
+                position: Math.max(0, Math.min(pos(), curBuf.duration || 0))
+              })
+            } catch (e2) { }
+          }
+        } catch (e) { }
+        if (mediaSessionReady) return;
+        mediaSessionReady = true;
+        var act = function (name, fn) {
+          try { navigator.mediaSession.setActionHandler(name, fn) } catch (e) { }
+        };
+        act('play', function () {
+          if (!ac || !live) return;
+          if (paused) { ac.resume(); paused = false; pp.textContent = 'Pauza'; syncTitleEditButton(); showUI(); updateMediaSession() }
+        });
+        act('pause', function () {
+          if (!ac || !live) return;
+          if (!paused) { ac.suspend(); paused = true; pp.textContent = 'Davom etish'; syncTitleEditButton(); showUI(); updateMediaSession() }
+        });
+        act('previoustrack', function () {
+          if (curBuf && pos() > 3) seekTo(0);
+          else step(-1);
+          showUI(); updateMediaSession()
+        });
+        act('nexttrack', function () { step(1); showUI(); updateMediaSession() });
+        act('seekto', function (details) {
+          if (details && typeof details.seekTime === 'number') seekTo(details.seekTime);
+          updateMediaSession()
+        });
+        act('seekbackward', function (details) {
+          var off = (details && details.seekOffset) || 10;
+          seekTo(Math.max(0, pos() - off)); updateMediaSession()
+        });
+        act('seekforward', function (details) {
+          var off = (details && details.seekOffset) || 10;
+          seekTo(pos() + off); updateMediaSession()
+        });
+        act('stop', function () {
+          if (!ac) return;
+          ac.suspend(); paused = true; pp.textContent = 'Davom etish';
+          seekTo(0); syncTitleEditButton(); showUI(); updateMediaSession()
+        })
+      }
+      pp.onclick = function () {
+        if (!ac) return;
+        if (paused) { ac.resume(); pp.textContent = 'Pauza' }
+        else { ac.suspend(); pp.textContent = 'Davom etish' }
+        paused = !paused; syncTitleEditButton(); showUI(); updateMediaSession()
+      };
       $('fs').onclick = function () { if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document) } else { var d = document.documentElement; (d.requestFullscreen || d.webkitRequestFullscreen || function () { }).call(d) } };
       var vzEl = $('vz'); try { var sv = parseInt(localStorage.getItem('polisha-vz')); if (sv >= 0 && sv <= 8) VZ = sv } catch (e) { }
       vzEl.value = VZ; vzEl.addEventListener('change', function () { VZ = +vzEl.value; try { localStorage.setItem('polisha-vz', VZ) } catch (e) { } });
@@ -1847,10 +2430,68 @@
         var autoEnabled = autoThemeButton.classList.contains('on');
         var bs = document.querySelectorAll('#sw .sw'); for (var j = 0; j < bs.length; j++) { bs[j].classList.toggle('on', !autoEnabled && j === k); bs[j].setAttribute('aria-pressed', !autoEnabled && j === k) }
         try { localStorage.setItem('polisha-th', k) } catch (e) { }
+        if (typeof updateThemeToggleFace === 'function') updateThemeToggleFace()
+      }
+      var themeToggle = $('themeToggle'), themePopover = $('themePopover');
+      function isMobileThemeUI() {
+        return matchMedia('(max-width:699px), (orientation: landscape) and (max-height: 520px) and (pointer: coarse)').matches
+      }
+      function updateThemeToggleFace() {
+        if (!themeToggle) return;
+        var t = THEMES[TI] || THEMES[0];
+        themeToggle.style.background = 'linear-gradient(135deg,rgb(' + t.v + '),rgb(' + t.m + ') 55%,rgb(' + t.i + '))';
+        themeToggle.textContent = autoThemeButton.classList.contains('on') ? '↻' : '🌙';
+        themeToggle.title = 'Mavzu: ' + t.n;
+        themeToggle.setAttribute('aria-label', 'Mavzu: ' + t.n + ' — tanlash')
+      }
+      function setThemePopover(open) {
+        if (!themePopover || !themeToggle) return;
+        if (!isMobileThemeUI()) {
+          themePopover.classList.remove('open');
+          themeToggle.setAttribute('aria-expanded', 'false');
+          return
+        }
+        var willOpen = !!open;
+        themePopover.classList.toggle('open', willOpen);
+        themeToggle.setAttribute('aria-expanded', String(willOpen));
+        if (willOpen) {
+          /* auto mavzuni o'chirmaymiz — faqat rang tanlash oynasini ochamiz */
+          showUI()
+        }
+      }
+      function themeWrapContains(node) {
+        var w = $('themeWrap');
+        return w && node && w.contains(node)
       }
       THEMES.forEach(function (t, j) {
         var b = document.createElement('button'); b.className = 'sw'; b.title = t.n; b.setAttribute('aria-label', 'Mavzu: ' + t.n);
-        b.style.background = 'linear-gradient(135deg,rgb(' + t.v + '),rgb(' + t.m + ') 55%,rgb(' + t.i + '))'; b.onclick = function () { applyTheme(j); showUI() }; $('sw').appendChild(b)
+        b.style.background = 'linear-gradient(135deg,rgb(' + t.v + '),rgb(' + t.m + ') 55%,rgb(' + t.i + '))';
+        b.onclick = function (ev) {
+          if (ev) ev.stopPropagation();
+          setAutoTheme(false, true);
+          applyTheme(j);
+          setThemePopover(false);
+          updateThemeToggleFace();
+          showUI()
+        };
+        $('sw').appendChild(b)
+      });
+      if (themeToggle) {
+        themeToggle.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!isMobileThemeUI()) return;
+          setThemePopover(!themePopover.classList.contains('open'))
+        });
+        document.addEventListener('pointerdown', function (e) {
+          if (!themePopover || !themePopover.classList.contains('open')) return;
+          if (themeWrapContains(e.target)) return;
+          setThemePopover(false)
+        }, true)
+      }
+      addEventListener('resize', function () {
+        if (!isMobileThemeUI()) setThemePopover(false);
+        updateThemeToggleFace()
       });
       function setAutoTheme(enabled, persist) {
         autoThemeButton.classList.toggle('on', enabled);
@@ -1863,11 +2504,13 @@
           swatch.classList.toggle('on', selected);
           swatch.setAttribute('aria-pressed', String(selected))
         });
+        updateThemeToggleFace();
         if (persist) { try { localStorage.setItem('polisha-auto-theme', enabled ? '1' : '0') } catch (e) { } }
       }
       autoThemeButton.addEventListener('click', function () {
         setAutoTheme(!autoThemeButton.classList.contains('on'), true);
-        themeAutoTime = 0
+        themeAutoTime = 0;
+        updateThemeToggleFace()
       });
       autoThemeInterval.addEventListener('change', function () {
         try { localStorage.setItem('polisha-auto-theme-interval', autoThemeInterval.value) } catch (e) { }
@@ -1881,6 +2524,7 @@
       } catch (e) { setAutoTheme(false, false) }
       try { var sth = parseInt(localStorage.getItem('polisha-th')); if (sth >= 0 && sth < THEMES.length) TI = sth } catch (e) { }
       applyTheme(TI, true);
+      updateThemeToggleFace();
       /* ===== 3D sarlavha, moslashuvchan o'lcham, avto to'liq ekran, sozlamalar paneli ===== */
       var mc = document.createElement('canvas').getContext('2d'), curTi = '', curAr = '', fsDone = false, minuteMark = 0;
       function fitTitle(ti, ar) {
@@ -1913,7 +2557,13 @@
         try { var r = f.call(d); if (r && r.then) r.then(function () { fsDone = true }, function () { }); else fsDone = true } catch (e) { }
       }
       ['pointerup', 'keydown', 'touchend'].forEach(function (ev) { document.addEventListener(ev, autoFS, { passive: true }) });
-      $('mb').onclick = function () { var mo = $('more'), open = !mo.classList.contains('open'); togglePanel(mo, open); this.setAttribute('aria-expanded', open); showUI() };
+      $('mb').onclick = function () {
+        var mo = $('more'), open = !mo.classList.contains('open');
+        togglePanel(mo, open);
+        this.setAttribute('aria-expanded', open);
+        if (!open) setThemePopover(false);
+        showUI()
+      };
       function band(a, b) { var s = 0; for (var i = a; i < b; i++)s += data[i]; return s / ((b - a) * 255) }
       function sm(v, t, up, dn) { return v + (t - v) * (t > v ? up : dn) }
 
@@ -1944,6 +2594,7 @@
       function cnt(mult) { if (!P.on) return 0; var c = P.amt * 4 * (mult || 1); return Math.floor(c) + (Math.random() < c % 1 ? 1 : 0) }
       function ccol() { var mp = { red: '255,30,50', green: '40,255,110', blue: '60,200,255', yellow: '255,225,50', pink: '255,46,136', white: '244,234,255' }; if (P.col !== 'mix') return mp[P.col] || mp.white; var a = [T.m, T.i, T.e, T.c[0]]; return a[Math.floor(Math.random() * a.length)] }
       var t0 = performance.now(), last = t0, shake = 0, C = [], pend = 0, zoom = 1;
+      var titlePulse = 0, titleScaleSm = 1, titleTiltYsm = 0, titleTiltXsm = 0;
       function frame(now) {
         requestAnimationFrame(frame);
         var dt = Math.min((now - last) / 16.67, 3); last = now; var t = (now - t0) / 1000, tb, tm, th;
@@ -1955,10 +2606,19 @@
           }
         }
         if (live && !paused && ac) { var elapsedMinute = Math.floor((ac.currentTime - t0a) / 60); if (elapsedMinute > minuteMark) { minuteMark = elapsedMinute; spinTitle() } }
-        if (live && an && !paused) { an.getByteFrequencyData(data); an2.getByteFrequencyData(data2); tb = band(1, 7); tm = band(7, 60); th = band(60, 200); rb = 0; for (var i = 1; i < 7; i++)rb += data2[i]; rb /= 1530 }
-        else if (!live) { tb = .22 + .1 * Math.sin(t * 1.4); tm = .2 + .08 * Math.sin(t * .9); th = .15; for (var i = 0; i < 512; i++)data[i] = (.25 + .2 * Math.sin(i * .12 + t * 2)) * 140 }
-        else { tb = bass; tm = mid; th = high }
-        bass = sm(bass, tb, .6, .1); mid = sm(mid, tm, .4, .1); high = sm(high, th, .5, .12);
+        if (live && an && !paused) {
+          an.getByteFrequencyData(data); an2.getByteFrequencyData(data2);
+          tb = band(1, 7); tm = band(7, 60); th = band(60, 200);
+          rb = 0; for (var i = 1; i < 7; i++) rb += data2[i]; rb /= 1530
+        } else if (!live) {
+          tb = .22 + .1 * Math.sin(t * 1.4); tm = .2 + .08 * Math.sin(t * .9); th = .15;
+          for (var i = 0; i < 512; i++) data[i] = (.25 + .2 * Math.sin(i * .12 + t * 2)) * 140
+        } else {
+          /* Pauza: ta'sirlanish o'chadi — silliq nolgacha tushadi */
+          tb = 0; tm = 0; th = 0; rb = 0; nn = 0; on_ = false;
+          for (var i = 0; i < 512; i++) data[i] *= .82
+        }
+        bass = sm(bass, tb, .6, live && paused ? .35 : .1); mid = sm(mid, tm, .4, live && paused ? .35 : .1); high = sm(high, th, .5, live && paused ? .35 : .12);
         var on_ = false, nn = 0; if (live && !paused) { hist.push(rb); if (hist.length > 72) hist.shift(); var hi = Math.max.apply(null, hist), lo = Math.min.apply(null, hist), rg = hi - lo; nn = (rb - lo) / Math.max(rg, .08); on_ = ((nn > .6 && pn <= .6 && rg > .04) || (rb - prb > .035)) && now - lastBeat > 170; pn = nn; prb = rb; bass = sm(bass, .1 + .9 * nn, .75, .12); avg += (bass - avg) * .02 }
         if (on_) {
           beat = 1; lastBeat = now; shake = reduce ? 0 : .8; gi = (gi + 1) % 3; gC = Math.max(gC, .75); sDone = false; pend += cnt(1);
@@ -1971,6 +2631,16 @@
         /* camera: punch-in on bass + light vibration */
         var tz = 1 + K * zc * (beat * .10 + str * .09 + bass * .12); zoom += (tz - zoom) * (tz > zoom ? .55 : .14); var tt2 = tdir * K * zc * (str * .08 + beat * .02); tilt += (tt2 - tilt) * (Math.abs(tt2) > Math.abs(tilt) ? .45 : .12);
         var amp = (shake * 7 + str * 13) * K * zc * D, sx = (Math.sin(t * 121) + Math.sin(t * 77 + 1)) * .5 * amp, sy = (Math.sin(t * 103 + 2) + Math.sin(t * 61)) * .5 * amp, rot = tilt + Math.sin(t * 97) * .004 * str * K * zc, cr_ = Math.cos(rot) * zoom, sr_ = Math.sin(rot) * zoom;
+        /* Sarlavha: sekin bass-pulse + uzoq basda sekin qiyshayish */
+        if (on_) titlePulse = 1;
+        titlePulse *= Math.pow(.965, dt);
+        var bassHold = live && !paused ? Math.max(0, bass - .12) : 0;
+        var targetTitleScale = 1 + titlePulse * .14 + bassHold * .1;
+        var targetTiltY = live && !paused ? tdir * bassHold * 4.5 : 0;
+        var targetTiltX = live && !paused ? bassHold * 2.2 : 0;
+        titleScaleSm += (targetTitleScale - titleScaleSm) * (targetTitleScale > titleScaleSm ? .045 : .06) * Math.min(dt, 2.5);
+        titleTiltYsm += (targetTiltY - titleTiltYsm) * .028 * Math.min(dt, 2.5);
+        titleTiltXsm += (targetTiltX - titleTiltXsm) * .028 * Math.min(dt, 2.5);
         ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over';
         ctx.fillStyle = 'rgba(' + T.bg + ',' + (.35 - bass * .12) + ')'; ctx.fillRect(0, 0, W, H);
         ctx.setTransform(cr_, sr_, -sr_, cr_, cx - (cr_ * cx - sr_ * cy) + sx, cy - (sr_ * cx + cr_ * cy) + sy);
@@ -2046,7 +2716,9 @@
         drawRings(true);
 
         if (gR > .2 && !reduce) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(' + T.s + ',' + Math.min(.16, gR * gR * .12 * K) + ')'; ctx.fillRect(-W, -H, 3 * W, 3 * H) }
-        tt.style.transform = 'translate3d(' + (sx / D) + 'px,' + (sy / D) + 'px,0) translateY(-50%) perspective(1000px) rotateY(' + (Math.sin(t * .7) * 6 + tdir * str * 10) + 'deg) rotateX(' + (Math.cos(t * .5) * 3.5 + str * 5) + 'deg) rotate(' + rot + 'rad) scale(' + zoom + ')';
+        /* Kamera tebranishi alohida; sarlavha o'zi sekin pulse/tilt */
+        var titleShakeX = (sx / D) * .15, titleShakeY = (sy / D) * .15;
+        tt.style.transform = 'translate3d(' + titleShakeX + 'px,' + titleShakeY + 'px,0) translateY(-50%) perspective(1000px) rotateY(' + titleTiltYsm + 'deg) rotateX(' + titleTiltXsm + 'deg) scale(' + titleScaleSm + ')';
       }
       /* ===== Qo'shimcha: "?" va ♫ tugmalari ham burchakka yig'ilsin + harf aylanishi tuzatmasi ===== */
       var extraBtns = [helpButton, lyricsToggle], extraAnims = [], extraId = 0;
@@ -2117,7 +2789,6 @@
       }).observe(ui, { attributes: true, attributeFilter: ['class'] });
       cv.addEventListener('pointerdown', function () { if (ui.classList.contains('controls-collapsed')) tbShow(true) });
 
-      
 
       /* ===== Fonda ijro + bildirishnoma boshqaruvi (Media Session) + har bir musiqaga tasodifiy fon ===== */
       // var audioEl = null, curUrl = '', curFile = null, lastPosSent = 0;
