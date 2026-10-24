@@ -2198,25 +2198,37 @@
         }
       } catch (e) { }
       $('f').addEventListener('change', function (e) { playFile(e.target.files[0]); e.target.value = '' });
-      /* ===== Media Session: bildirishnoma / qulf ekrani tugmalari ===== */
-      var mediaSessionReady = false, mediaArtCache = '';
+      /* ===== Media Session (WebToApp/WebView uchun xavfsiz) ===== */
+      var mediaSessionReady = false, mediaSessionDisabled = false, mediaArtCache = '';
+      function isWebViewApp() {
+        try {
+          var ua = navigator.userAgent || '';
+          if (/; wv\)/i.test(ua) || /WebView/i.test(ua)) return true;
+          if (window.Android || window.webToApp || window.WebToApp || window.ReactNativeWebView) return true;
+          if (matchMedia('(display-mode: standalone)').matches && /Android/i.test(ua)) return true
+        } catch (e) { }
+        return false
+      }
+      try {
+        if (localStorage.getItem('auramb-ms') === '0') mediaSessionDisabled = true;
+        if (localStorage.getItem('auramb-ms') === '1') mediaSessionDisabled = false;
+        else if (isWebViewApp()) {
+          /* WebToApp: default xavfsiz rejim — setPositionState va og'ir artwork o'chiriladi */
+          mediaSessionDisabled = false
+        }
+      } catch (e) { }
       function mediaArtUrl() {
+        if (isWebViewApp()) return './siteLogo.png';
         if (mediaArtCache) return mediaArtCache;
         try {
-          var c = document.createElement('canvas'); c.width = c.height = 512;
+          var c = document.createElement('canvas'); c.width = c.height = 256;
           var g = c.getContext('2d');
-          var gr = g.createLinearGradient(0, 40, 512, 480);
+          var gr = g.createLinearGradient(0, 20, 256, 240);
           gr.addColorStop(0, '#05010d');
-          gr.addColorStop(.35, '#12061a');
-          gr.addColorStop(.62, '#ff2e8844');
-          gr.addColorStop(.82, '#9fe8ff55');
-          gr.addColorStop(1, '#05010d');
-          g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
-          var soft = g.createRadialGradient(256, 220, 20, 256, 260, 280);
-          soft.addColorStop(0, 'rgba(255,46,136,.35)');
-          soft.addColorStop(.55, 'rgba(159,232,255,.2)');
-          soft.addColorStop(1, 'rgba(5,1,13,0)');
-          g.fillStyle = soft; g.fillRect(0, 0, 512, 512);
+          gr.addColorStop(.4, '#12061a');
+          gr.addColorStop(.7, '#ff2e8866');
+          gr.addColorStop(1, '#9fe8ff66');
+          g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
           mediaArtCache = c.toDataURL('image/png');
           return mediaArtCache
         } catch (e) {
@@ -2224,27 +2236,31 @@
         }
       }
       function updateMediaSession() {
-        if (!('mediaSession' in navigator)) return;
+        if (mediaSessionDisabled || !('mediaSession' in navigator)) return;
         try {
           var artSrc = mediaArtUrl();
-          navigator.mediaSession.metadata = new MediaMetadata({
-            title: currentTitleName || 'AuraMB',
-            artist: currentArtistName || 'AuraMB',
-            album: 'AuraMB',
-            artwork: [
-              { src: artSrc, sizes: '512x512', type: 'image/png' },
-              { src: artSrc, sizes: '256x256', type: 'image/png' }
-            ]
-          });
-          /* Pauzada ham tugmalar saqlanadi — faqat holat o'zgaradi */
-          navigator.mediaSession.playbackState = (!live) ? 'none' : (paused ? 'paused' : 'playing');
-          if (curBuf && navigator.mediaSession.setPositionState) {
+          if (typeof MediaMetadata !== 'undefined') {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: currentTitleName || 'AuraMB',
+              artist: currentArtistName || 'AuraMB',
+              album: 'AuraMB',
+              artwork: [{ src: artSrc, sizes: '256x256', type: 'image/png' }]
+            })
+          }
+          try {
+            navigator.mediaSession.playbackState = (!live) ? 'none' : (paused ? 'paused' : 'playing')
+          } catch (e0) { }
+          /* setPositionState ba'zi WebView larda crash beradi — faqat oddiy brauzerda */
+          if (!isWebViewApp() && curBuf && navigator.mediaSession.setPositionState) {
             try {
-              navigator.mediaSession.setPositionState({
-                duration: Math.max(curBuf.duration || 0, 0.1),
-                playbackRate: 1,
-                position: Math.max(0, Math.min(pos(), curBuf.duration || 0))
-              })
+              var dur = curBuf.duration || 0, p = pos();
+              if (dur > 0 && isFinite(dur) && isFinite(p)) {
+                navigator.mediaSession.setPositionState({
+                  duration: dur,
+                  playbackRate: 1,
+                  position: Math.max(0, Math.min(p, dur))
+                })
+              }
             } catch (e2) { }
           }
         } catch (e) { }
@@ -2253,38 +2269,75 @@
         var act = function (name, fn) {
           try { navigator.mediaSession.setActionHandler(name, fn) } catch (e) { }
         };
-        act('play', function () {
+        var safe = function (fn) {
+          return function (details) {
+            try { fn(details) } catch (err) { }
+          }
+        };
+        act('play', safe(function () {
           if (!ac || !live) return;
-          if (paused) { ac.resume(); paused = false; pp.textContent = 'Pauza'; syncTitleEditButton(); showUI(); updateMediaSession() }
-        });
-        act('pause', function () {
+          if (paused) {
+            ac.resume(); paused = false; pp.textContent = 'Pauza';
+            syncTitleEditButton(); showUI(); updateMediaSession()
+          }
+        }));
+        act('pause', safe(function () {
           if (!ac || !live) return;
-          if (!paused) { ac.suspend(); paused = true; pp.textContent = 'Davom etish'; syncTitleEditButton(); showUI(); updateMediaSession() }
-        });
-        act('previoustrack', function () {
-          if (curBuf && pos() > 3) seekTo(0);
-          else step(-1);
+          if (!paused) {
+            ac.suspend(); paused = true; pp.textContent = 'Davom etish';
+            syncTitleEditButton(); showUI(); updateMediaSession()
+          }
+        }));
+        act('previoustrack', safe(function () {
+          if (curBuf && pos() > 3) seekTo(0); else step(-1);
           showUI(); updateMediaSession()
-        });
-        act('nexttrack', function () { step(1); showUI(); updateMediaSession() });
-        act('seekto', function (details) {
-          if (details && typeof details.seekTime === 'number') seekTo(details.seekTime);
-          updateMediaSession()
-        });
-        act('seekbackward', function (details) {
-          var off = (details && details.seekOffset) || 10;
-          seekTo(Math.max(0, pos() - off)); updateMediaSession()
-        });
-        act('seekforward', function (details) {
-          var off = (details && details.seekOffset) || 10;
-          seekTo(pos() + off); updateMediaSession()
-        });
-        act('stop', function () {
-          if (!ac) return;
-          ac.suspend(); paused = true; pp.textContent = 'Davom etish';
-          seekTo(0); syncTitleEditButton(); showUI(); updateMediaSession()
-        })
+        }));
+        act('nexttrack', safe(function () {
+          step(1); showUI(); updateMediaSession()
+        }));
+        /* seek* WebView da muammoli bo'lishi mumkin — faqat brauzer */
+        if (!isWebViewApp()) {
+          act('seekto', safe(function (details) {
+            if (details && typeof details.seekTime === 'number') seekTo(details.seekTime);
+            updateMediaSession()
+          }));
+          act('seekbackward', safe(function (details) {
+            seekTo(Math.max(0, pos() - ((details && details.seekOffset) || 10)));
+            updateMediaSession()
+          }));
+          act('seekforward', safe(function (details) {
+            seekTo(pos() + ((details && details.seekOffset) || 10));
+            updateMediaSession()
+          }));
+          act('stop', safe(function () {
+            if (!ac) return;
+            ac.suspend(); paused = true; pp.textContent = 'Davom etish';
+            seekTo(0); syncTitleEditButton(); showUI(); updateMediaSession()
+          }))
+        }
       }
+      /* To'liq o'chirish: localStorage.setItem('auramb-ms','0') */
+      try {
+        window.disableAuraMediaSession = function () {
+          mediaSessionDisabled = true;
+          mediaSessionReady = false;
+          try { localStorage.setItem('auramb-ms', '0') } catch (e) { }
+          try {
+            if ('mediaSession' in navigator) {
+              navigator.mediaSession.playbackState = 'none';
+              ['play', 'pause', 'previoustrack', 'nexttrack', 'seekto', 'seekbackward', 'seekforward', 'stop'].forEach(function (n) {
+                try { navigator.mediaSession.setActionHandler(n, null) } catch (e) { }
+              })
+            }
+          } catch (e) { }
+        };
+        window.enableAuraMediaSession = function () {
+          mediaSessionDisabled = false;
+          mediaSessionReady = false;
+          try { localStorage.setItem('auramb-ms', '1') } catch (e) { }
+          updateMediaSession()
+        }
+      } catch (e) { }
       pp.onclick = function () {
         if (!ac) return;
         if (paused) { ac.resume(); pp.textContent = 'Pauza' }
